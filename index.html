@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buffet Fitness Challenge ⌚🍖</title>
+    <!-- โหลด Google Identity Services ไลบรารีเวอร์ชันล่าสุด -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
@@ -28,13 +29,12 @@
         .top-nav-btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .top-nav-btn:disabled { background: #ccc !important; cursor: not-allowed; }
 
-        /* แถบล็อกอิน Google */
-        .google-auth-bar { background: #f8f9fa; border: 1px solid var(--border-color); padding: 12px; border-radius: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .google-auth-bar { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border: 1px solid var(--border-color); padding: 12px; border-radius: 16px; margin-bottom: 20px; gap: 10px; }
         .auth-status { font-size: 12px; font-weight: 600; color: var(--gray-sub); }
         .auth-status.online { color: var(--secondary); }
         .btn-google-login { background: var(--google-blue); color: white; border: none; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
         .btn-google-login:hover { opacity: 0.9; }
-        .btn-google-login.connected { background: #e2e8f0; color: var(--dark); cursor: default; }
+        .btn-google-login.connected { background: #2ed573; color: white; }
 
         .btn-update-action { background: var(--update-btn); box-shadow: 0 4px 12px rgba(30, 55, 153, 0.2); }
         .btn-manual-toggle { background: #341f97; box-shadow: 0 4px 12px rgba(52, 31, 151, 0.15); flex: 1; }
@@ -43,7 +43,6 @@
 
         .manual-expand-panel { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, margin-bottom 0.4s ease-out, padding 0.4s ease-out; background: #f8f9fa; border-radius: 18px; border: 1px solid transparent; }
         .manual-expand-panel.open { max-height: 1000px; margin-bottom: 20px; padding: 14px; border-color: var(--border-color); }
-        .panel-title { font-size: 12px; font-weight: 700; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #341f97; }
 
         h1 { text-align: center; color: var(--primary); margin-bottom: 20px; font-size: 22px; font-weight: 800; }
         
@@ -96,7 +95,6 @@
     </div>
 
     <div id="manualPanel" class="manual-expand-panel">
-        <div class="panel-title">✍️ บันทึกกิจกรรมด้วยตัวเอง</div>
         <div class="calendar-card">
             <label for="activityDate">📆 วันที่ทำกิจกรรม:</label>
             <input type="date" id="activityDate">
@@ -152,52 +150,53 @@
 
 <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxcceccnfFNs2tvvOdB5tFMLKi8wWR5FY5YkOU8dzgFMgAtCdIqsnuPhC6WF6MBL3-8qQ/exec";
-    
-    // ⚠️ นำ Client ID ของคุณมาวางตรงนี้เพื่อให้ระบบแสดงผลปุ่มล็อกอินได้อย่างถูกต้อง
     const GOOGLE_CLIENT_ID = "631377617694-b2j4r98uadect1e0idu7rij4ug8an1f9.apps.googleusercontent.com"; 
 
-    let tokenClient;
+    let tokenClient = null;
     let accessToken = null;
     let loggedInUser = "B";
 
     document.getElementById('activityDate').valueAsDate = new Date();
     refreshData();
 
-    // 🔑 ฟังก์ชันเปิดหน้าป๊อปอัปให้ผู้ใช้กดยอมรับสิทธิ์ข้อมูลฟิตเนส
+    // 🔑 ฟังก์ชันแก้บั๊กปุ่มค้าง: เคลียร์ค่าและโหลด Token Client ใหม่ทุกครั้งที่กดปุ่มล็อกอินสีฟ้า
     function requestGoogleAuth() {
-        if(typeof google === 'undefined') { alert('ระบบโครงสร้าง Google ยังโหลดไม่เสร็จ กรุณารอสักครู่ครับ'); return; }
+        if (typeof google === 'undefined') { alert('กำลังโหลดระบบ Google API กรุณารอสักครู่ครับ'); return; }
         
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
-            scope: 'https://www.googleapis.com/auth/fitness.activity.read https://www.googleapis.com/auth/userinfo.profile',
-            callback: (tokenResponse) => {
-                if (tokenResponse.error !== undefined) { alert('การเชื่อมต่อล้มเหลว'); return; }
-                accessToken = tokenResponse.access_token;
-                
-                // ค้นหาชื่อเล่นของ Gmail บัญชีที่พึ่งล็อกอินสำเร็จ
-                fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                })
-                .then(res => res.json())
-                .then(user => {
-                    loggedInUser = user.given_name || "B";
-                    document.getElementById('authText').innerText = `🟢 เชื่อมต่อ: บัญชีคุณ ${loggedInUser}`;
-                    document.getElementById('authText').classList.add('online');
-                    document.getElementById('loginGoogleBtn').innerText = "✅ Connected";
-                    document.getElementById('loginGoogleBtn').classList.add('connected');
-                    document.getElementById('updateBtn').disabled = false; // ปลดล็อกปุ่มอัปเดตกิจกรรมให้กดใช้งานได้
-                })
-                .catch(() => {
-                    loggedInUser = "B";
-                    document.getElementById('authText').innerText = "🟢 เชื่อมต่อบัญชีฟิตเนสสำเร็จ";
-                    document.getElementById('updateBtn').disabled = false;
-                });
-            },
-        });
-        tokenClient.requestAccessToken({prompt: 'consent'});
+        try {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: GOOGLE_CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/fitness.activity.read https://www.googleapis.com/auth/userinfo.profile',
+                callback: (tokenResponse) => {
+                    if (tokenResponse.error !== undefined) { alert('การเชื่อมต่อถูกปฏิเสธ'); return; }
+                    accessToken = tokenResponse.access_token;
+                    
+                    // เรียกดูข้อมูลบัญชีผู้ใช้จริงที่เพิ่งกดยืนยันสิทธิ์สำเร็จ
+                    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                        headers: { 'Authorization': `Bearer ${accessToken}` }
+                    })
+                    .then(res => res.json())
+                    .then(user => {
+                        loggedInUser = user.given_name || "B";
+                        document.getElementById('authText').innerText = `🟢 เชื่อมต่อ: คุณ ${loggedInUser}`;
+                        document.getElementById('authText').classList.add('online');
+                        document.getElementById('loginGoogleBtn').innerText = "🔄 สลับบัญชี";
+                        document.getElementById('loginGoogleBtn').classList.add('connected');
+                        document.getElementById('updateBtn').disabled = false;
+                    })
+                    .catch(() => {
+                        loggedInUser = "B";
+                        document.getElementById('authText').innerText = "🟢 เชื่อมต่อบัญชีฟิตเนสสำเร็จ";
+                        document.getElementById('updateBtn').disabled = false;
+                    });
+                },
+            });
+            tokenClient.requestAccessToken({prompt: 'consent'});
+        } catch(e) {
+            alert('ระบบความปลอดภัยขัดข้อง กรุณาเปิดผ่านลิงก์เว็บจริงบน GitHub Pages ครับ');
+        }
     }
 
-    // ฟังก์ชันไปสแกนหาประวัติกิจกรรมของบัญชีที่ล็อกอินอยู่ ณ ขณะนั้น
     function fetchFitnessData() {
         setButtonsState(true);
         const start = new Date(); start.setHours(0,0,0,0);
@@ -209,19 +208,154 @@
         .then(res => res.json())
         .then(resData => {
             if (resData.session && resData.session.length > 0) {
-                // กรองชนิดกิจกรรม: วิ่ง=8, เวท=57, แบด=10
                 const fitSessions = resData.session.filter(s => [8, 57, 10].includes(Number(s.activityType)));
                 
                 if(fitSessions.length === 0) {
-                    alert(`ไม่พบกิจกรรม วิ่ง, เวท, หรือแบดมินตัน วันนี้ในบัญชีของ ${loggedInUser} เลยครับ! อย่าลืมซิงค์ข้อมูลจากนาฬิกาเข้ามือถือก่อนนะครับ`);
+                    alert(`ไม่พบกิจกรรม วิ่ง, เวท, หรือแบดมินตันของวันนี้ในบัญชีของคุณ ${loggedInUser} เลยครับ อย่าลืมกดซิงค์แอปนาฬิกาลงมือถือก่อนนะครับ`);
                     setButtonsState(false);
                     return;
                 }
                 
                 const lastAct = fitSessions[fitSessions.length - 1];
                 let typeName = "ออกกำลังกาย";
-                let multi = 1;
-                let unitLabel = "หน่วย";
+                let rate = 1;
+                let unit = "หน่วย";
+                let streamName = "";
+
+                if(Number(lastAct.activityType) === 8) { typeName = "วิ่ง"; rate = 10; unit = "กม."; streamName = "derived:com.google.distance.delta:com.google.android.gms:merge_distance_delta"; }
+                else if(Number(lastAct.activityType) === 57) { typeName = "เวทเทรนนิ่ง"; rate = 0.1; unit = "kcal"; streamName = "derived:com.google.calories.expended:com.google.android.gms:merge_calories_expended"; }
+                else if(Number(lastAct.activityType) === 10) { typeName = "ตีแบดมินตัน"; rate = 0.05; unit = "kcal"; streamName = "derived:com.google.calories.expended:com.google.android.gms:merge_calories_expended"; }
+
+                const dataUrl = `https://www.googleapis.com/fitness/v1/users/me/dataSources/${streamName}/datasets/${lastAct.startTimeMillis}000000-${lastAct.endTimeMillis}000000`;
                 
-                if(Number(lastAct.activityType) === 8) { typeName = "วิ่ง"; multi = 10; unitLabel = "กม."; }
-                else if(Number(lastAct.activityType) === 57) { typeName = "เวทเท
+                fetch(dataUrl, { headers: { 'Authorization': `Bearer ${accessToken}` } })
+                .then(r => r.json())
+                .then(dataset => {
+                    let totalVal = 0;
+                    if(dataset.point && dataset.point.length > 0) {
+                        dataset.point.forEach(p => { if(p.value && p.value[0]) totalVal += p.value[0].fpVal || p.value[0].intVal || 0; });
+                    }
+
+                    if(Number(lastAct.activityType) === 8) totalVal = totalVal / 1000;
+                    
+                    totalVal = Math.round(totalVal * 10) / 10;
+                    let earned = Math.round(totalVal * rate);
+                    if(earned <= 0) earned = 20;
+
+                    sendDataToASheet(loggedInUser, typeName, totalVal, earned, unit);
+                })
+                .catch(() => {
+                    sendDataToASheet(loggedInUser, typeName, 1, 20, unit);
+                });
+
+            } else {
+                alert(`วันนี้ยังไม่มีกิจกรรมใดๆ ซิงค์ลงในแอปของ ${loggedInUser} เลยครับ`);
+                setButtonsState(false);
+            }
+        })
+        .catch(() => {
+            alert("สิทธิ์เชื่อมต่อหมดอายุ กรุณากดปุ่มเพื่อ Login หรือเปิดใหม่อีกครั้งครับ");
+            setButtonsState(false);
+        });
+    }
+
+    function sendDataToASheet(runner, actName, value, earned, unit) {
+        const formattedDate = new Date().toLocaleDateString('th-TH');
+        const logText = `⌚ ${actName} (${runner}): ${value} ${unit} (+${earned} บาท)`;
+
+        const script = document.createElement('script');
+        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&text=${encodeURIComponent(logText)}&amount=${earned}&callback=handleData&_ts=${Date.now()}`;
+        document.body.appendChild(script);
+        script.remove();
+        alert(`🎉 บันทึกกิจกรรมของ ${runner} ลงตารางกองกลางของ A สำเร็จเรียบร้อย!`);
+    }
+
+    function setButtonsState(disabled) {
+        document.querySelectorAll('.action-btn').forEach(btn => btn.disabled = disabled);
+        document.getElementById('resetBtn').disabled = disabled;
+        document.getElementById('loadingStatus').style.display = disabled ? 'block' : 'none';
+    }
+
+    function togglePanel(targetId) { document.getElementById(targetId).classList.toggle('open'); }
+
+    function refreshData() {
+        const oldScript = document.getElementById('jsonpScript'); if (oldScript) oldScript.remove();
+        const script = document.createElement('script'); script.id = 'jsonpScript';
+        script.src = `${WEB_APP_URL}?callback=handleData&_ts=${Date.now()}`;
+        document.body.appendChild(script);
+    }
+
+    function handleData(response) {
+        if (!response) return;
+        document.getElementById('totalMoney').innerText = (response.totalMoney || 0).toLocaleString();
+        const dashboard = document.getElementById('dashboardArea');
+        let statusText = "🎯 เริ่มสะสมเพื่อมื้ออร่อย!";
+        
+        if (response.totalMoney < 0) {
+            dashboard.classList.add('debt');
+            statusText = "🚨 อยู่ในช่วงติดหนี้! ต้องรีบไปออกกำลังกายเพื่อชดใช้กรรมด่วน!";
+        } else {
+            dashboard.classList.remove('debt');
+            if (response.totalMoney >= 3000) statusText = "👑 ระดับ Gold: ชาบูพรีเมียม / วากิว / โรงแรมหรูจัดเต็ม!";
+            else if (response.totalMoney >= 1500) statusText = "🥩 ระดับ Silver: ปิ้งย่างเกาหลี / แซลมอนในห้างได้แล้ว!";
+            else if (response.totalMoney >= 600) statusText = "🐷 ระดับ Bronze: ชาบู/หมูกระทะแถวบ้านอิ่ม ๆ เลย!";
+        }
+        document.getElementById('tierStatus').innerText = statusText;
+
+        const listElement = document.getElementById('historyList'); listElement.innerHTML = '';
+        if (response.historyData && response.historyData.length > 0) {
+            response.historyData.forEach(item => {
+                const li = document.createElement('li'); li.className = item.isReduced ? 'history-item reduced' : 'history-item';
+                li.innerHTML = `<span>${item.text}</span> <small style="color:#999">${item.date}</small>`;
+                listElement.appendChild(li);
+            });
+        } else {
+            listElement.innerHTML = '<li class="history-item" style="border-left:4px solid #ccc; justify-content:center;"><span>ยังไม่มีประวัติกิจกรรมในรอบนี้</span></li>';
+        }
+        setButtonsState(false);
+    }
+
+    function addActivity(type, inputId, rate, unit) {
+        const inputElement = document.getElementById(inputId); const value = parseFloat(inputElement.value);
+        if (isNaN(value) || value <= 0) { alert('กรุณากรอกตัวเลขที่มากกว่า 0 นะครับ'); return; }
+        const earned = Math.round(value * rate); if (earned <= 0) { alert('ยอดเงินน้อยเกินไป ระบบไม่บันทึกครับ'); return; }
+        setButtonsState(true);
+        const rawDate = document.getElementById('activityDate').value;
+        const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString('th-TH') : new Date().toLocaleDateString('th-TH');
+        const logText = `✍️ ${type} (คีย์มือ): ${value} ${unit} (+${earned} บาท)`;
+
+        const script = document.createElement('script');
+        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&text=${encodeURIComponent(logText)}&amount=${earned}&callback=handleData&_ts=${Date.now()}`;
+        document.body.appendChild(script); script.remove();
+        inputElement.value = '';
+    }
+
+    function deductExpense() {
+        const expenseInput = document.getElementById('expenseInput'); const amount = Math.round(parseFloat(expenseInput.value));
+        if (isNaN(amount) || amount <= 0) { alert('กรุณากรอกจำนวนเงินที่ถูกต้องครับ'); return; }
+        setButtonsState(true);
+        const rawDate = document.getElementById('activityDate').value;
+        const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString('th-TH') : new Date().toLocaleDateString('th-TH');
+        const logText = `🔻 ถอนเงินกองกลาง (-${amount} บาท)`;
+
+        const script = document.createElement('script');
+        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&text=${encodeURIComponent(logText)}&amount=${-amount}&callback=handleData&_ts=${Date.now()}`;
+        document.body.appendChild(script); script.remove();
+        expenseInput.value = '';
+    }
+
+    function secureReset() {
+        const password = prompt('กรุณากรอกรหัสผ่านเพื่อรีเซ็ตเกม:');
+        if (password === '1234') {
+            if (confirm('ยืนยันที่จะล้างข้อมูลทั้งหมดบนตาราง Google Sheets ใช่ไหม?')) {
+                setButtonsState(true);
+                const script = document.createElement('script');
+                script.src = `${WEB_APP_URL}?action=reset&callback=handleData&_ts=${Date.now()}`;
+                document.body.appendChild(script); script.remove();
+                alert('รีเซ็ตระบบเรียบร้อยแล้ว!');
+            }
+        } else if (password !== null) { alert('รหัสผ่านไม่ถูกต้อง!'); }
+    }
+</script>
+</body>
+</html>
