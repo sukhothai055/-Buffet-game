@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buffet Fitness Challenge ⌚🍖</title>
+    <style>
+        :root {
+            --primary: #ff4757;
+            --secondary: #2ed573;
+            --warning: #ffa502;
+            --dark: #2f3542;
+            --light: #f1f2f6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--light); color: var(--dark); padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 500px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
+        
+        .btn-reset-top { position: absolute; top: 15px; right: 15px; background: #dfe4ea; color: #747d8c; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+        h1 { text-align: center; color: var(--primary); margin-top: 10px; margin-bottom: 20px; font-size: 24px; }
+        
+        .dashboard { background: linear-gradient(135deg, var(--primary), #ff6b81); color: white; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 25px; }
+        .dashboard.debt { background: linear-gradient(135deg, #747d8c, #a4b0be); }
+        .dashboard p { font-size: 14px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
+        .total-amount { font-size: 42px; font-weight: bold; margin: 5px 0; }
+        
+        .activity-card { background: #fafafa; border: 2px solid #eee; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .activity-card h3 { margin-bottom: 10px; display: flex; align-items: center; gap: 8px; color: #555; }
+        .expense-card { background: #fffaf0; border: 2px solid #ffeaa7; padding: 15px; border-radius: 12px; margin-bottom: 25px; }
+        .expense-card h3 { margin-bottom: 10px; display: flex; align-items: center; gap: 8px; color: #e67e22; }
+        
+        .form-group { display: flex; align-items: center; gap: 10px; }
+        input[type="number"] { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; }
+        .unit { font-weight: bold; color: #777; width: 50px; }
+        
+        button { width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        button:disabled { background: #ccc !important; cursor: not-allowed; }
+        .btn-add { background: var(--secondary); }
+        .btn-expense { background: var(--warning); }
+        
+        .history { margin-top: 25px; }
+        .history h3 { border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 10px; font-size: 16px; color: #777; }
+        .history-list { max-height: 200px; overflow-y: auto; list-style: none; }
+        .history-item { display: flex; justify-content: space-between; background: #f9f9f9; padding: 10px; border-radius: 6px; margin-bottom: 8px; font-size: 14px; border-left: 4px solid var(--secondary); }
+        .history-item.reduced { border-left: 4px solid var(--warning); }
+        .loading { text-align: center; font-size: 14px; color: #ff4757; margin-bottom: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <button class="btn-reset-top" id="resetBtn" onclick="secureReset()">⚙️ รีเซ็ตเกม</button>
+    <h1>⌚ เปลี่ยนเหงื่อเป็นบุฟเฟ่ต์ 🍖</h1>
+    
+    <div id="dashboardArea" class="dashboard">
+        <p>เงินกองกลางสะสมตอนนี้</p>
+        <div class="total-amount"><span id="totalMoney">0</span> ฿</div>
+        <span id="tierStatus">🔄 กำลังเชื่อมต่อตารางข้อมูล...</span>
+    </div>
+
+    <div id="loadingStatus" class="loading" style="display:none;">⏳ กำลังรับส่งข้อมูลแบบ Real-time...</div>
+
+    <div class="activity-form">
+        <div class="activity-card">
+            <h3>🏃‍♂️ วิ่ง (กิโลเมตรละ 10 บาท)</h3>
+            <div class="form-group">
+                <input type="number" id="runInput" placeholder="กรอกระยะทาง" min="0" step="0.1">
+                <span class="unit">กม.</span>
+            </div>
+            <button class="btn-add action-btn" onclick="addActivity('วิ่ง', 'runInput', 10, 'กม.')">บันทึกการวิ่ง</button>
+        </div>
+
+        <div class="activity-card">
+            <h3>🏋️‍♂️ เวทเทรนนิ่ง (10 kcal = 1 บาท)</h3>
+            <div class="form-group">
+                <input type="number" id="weightInput" placeholder="กรอก Active Calories" min="0">
+                <span class="unit">kcal</span>
+            </div>
+            <button class="btn-add action-btn" onclick="addActivity('เวทเทรนนิ่ง', 'weightInput', 0.1, 'kcal')">บันทึกการเวท</button>
+        </div>
+
+        <div class="activity-card">
+            <h3>🏸 ตีแบดมินตัน (20 kcal = 1 บาท)</h3>
+            <div class="form-group">
+                <input type="number" id="badmintonInput" placeholder="กรอก Active Calories" min="0">
+                <span class="unit">kcal</span>
+            </div>
+            <button class="btn-add action-btn" onclick="addActivity('ตีแบดมินตัน', 'badmintonInput', 0.05, 'kcal')">บันทึกการตีแบด</button>
+        </div>
+
+        <div class="expense-card">
+            <h3>💸 บันทึกค่าใช้จ่าย / ถอนเงินกองกลาง</h3>
+            <div class="form-group">
+                <input type="number" id="expenseInput" placeholder="กรอกจำนวนเงินที่ใช้" min="1">
+                <span class="unit">บาท</span>
+            </div>
+            <button class="btn-expense action-btn" onclick="deductExpense()">บันทึกค่าใช้จ่าย (ลบเงินคลัง)</button>
+        </div>
+    </div>
+
+    <div class="history">
+        <h3>📜 ประวัติการสะสมทุน</h3>
+        <ul id="historyList" class="history-list"></ul>
+    </div>
+</div>
+
+<script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxcceccnfFNs2tvvOdB5tFMLKi8wWR5FY5YkOU8dzgFMgAtCdIqsnuPhC6WF6MBL3-8qQ/exec";
+
+    // เรียกโหลดข้อมูลทันที
+    refreshData();
+
+    function setButtonsState(disabled) {
+        document.querySelectorAll('.action-btn').forEach(btn => btn.disabled = disabled);
+        document.getElementById('resetBtn').disabled = disabled;
+        document.getElementById('loadingStatus').style.display = disabled ? 'block' : 'none';
+    }
+
+    function refreshData() {
+        // ใช้การสร้างสคริปต์แบบสุ่มทับแคลช (Cache-busting) ป้องกันอาการค้างหน้าเดิม
+        const oldScript = document.getElementById('jsonpScript');
+        if (oldScript) oldScript.remove();
+
+        const script = document.createElement('script');
+        script.id = 'jsonpScript';
+        script.src = `${WEB_APP_URL}?callback=handleData&_ts=${Date.now()}`;
+        document.body.appendChild(script);
+    }
+
+    function handleData(response) {
+        document.getElementById('totalMoney').innerText = response.totalMoney.toLocaleString();
+        const dashboard = document.getElementById('dashboardArea');
+        let statusText = "🎯 เริ่มสะสมเพื่อมื้ออร่อย!";
+        
+        if (response.totalMoney < 0) {
+            dashboard.classList.add('debt');
+            statusText = "🚨 อยู่ในช่วงติดหนี้! ต้องรีบไปออกกำลังกายเพื่อชดใช้กรรมด่วน!";
+        } else {
+            dashboard.classList.remove('debt');
+            if (response.totalMoney >= 3000) statusText = "👑 ระดับ Gold: ชาบูพรีเมียม / วากิว / โรงแรมหรูจัดเต็ม!";
+            else if (response.totalMoney >= 1500) statusText = "🥩 ระดับ Silver: ปิ้งย่างเกาหลี / แซลมอนในห้างได้แล้ว!";
+            else if (response.totalMoney >= 600) statusText = "🐷 ระดับ Bronze: ชาบู/หมูกระทะแถวบ้านอิ่ม ๆ เลย!";
+        }
+        document.getElementById('tierStatus').innerText = statusText;
+
+        const listElement = document.getElementById('historyList');
+        listElement.innerHTML = '';
+        response.historyData.forEach(item => {
+            const li = document.createElement('li');
+            li.className = item.isReduced ? 'history-item reduced' : 'history-item';
+            li.innerHTML = `<span>${item.text}</span> <small style="color:#999">${item.date}</small>`;
+            listElement.appendChild(li);
+        });
+        setButtonsState(false);
+    }
+
+    function addActivity(type, inputId, rate, unit) {
+        const inputElement = document.getElementById(inputId);
+        const value = parseFloat(inputElement.value);
+        if (isNaN(value) || value <= 0) { alert('กรุณากรอกตัวเลขที่มากกว่า 0 นะครับตัวเธอ'); return; }
+
+        const earned = Math.round(value * rate);
+        if (earned <= 0) { alert('ยอดเงินน้อยเกินไป ระบบไม่บันทึกครับ'); return; }
+
+        setButtonsState(true);
+        const date = new Date().toLocaleDateString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        const logText = `${type}: ${value} ${unit} (+${earned} บาท)`;
+
+        const script = document.createElement('script');
+        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(date)}&text=${encodeURIComponent(logText)}&amount=${earned}&callback=handleData&_ts=${Date.now()}`;
+        document.body.appendChild(script);
+        script.remove();
+
+        inputElement.value = '';
+    }
+
+    function deductExpense() {
+        const expenseInput = document.getElementById('expenseInput');
+        const amount = Math.round(parseFloat(expenseInput.value));
+        if (isNaN(amount) || amount <= 0) { alert('กรุณากรอกจำนวนเงินที่ถูกต้องครับ'); return; }
+
+        setButtonsState(true);
+        const date = new Date().toLocaleDateString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        const logText = `🔻 ถอนเงินกองกลาง (-${amount} บาท)`;
+
+        const script = document.createElement('script');
+        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(date)}&text=${encodeURIComponent(logText)}&amount=${-amount}&callback=handleData&_ts=${Date.now()}`;
+        document.body.appendChild(script);
+        script.remove();
+
+        expenseInput.value = '';
+    }
+
+    function secureReset() {
+        const password = prompt('กรุณากรอกรหัสผ่านเพื่อรีเซ็ตเกม:');
+        if (password === '1234') {
+            if (confirm('ยืนยันที่จะล้างข้อมูลทั้งหมดบนตาราง Google Sheets ใช่ไหม?')) {
+                setButtonsState(true);
+                const script = document.createElement('script');
+                script.src = `${WEB_APP_URL}?action=reset&callback=handleData&_ts=${Date.now()}`;
+                document.body.appendChild(script);
+                script.remove();
+                alert('รีเซ็ตระบบเรียบร้อยแล้ว!');
+            }
+        } else if (password !== null) {
+            alert('รหัสผ่านไม่ถูกต้อง!');
+        }
+    }
+</script>
+</body>
+</html>
