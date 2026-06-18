@@ -29,11 +29,12 @@
         .top-nav-btn:disabled { background: #ccc !important; cursor: not-allowed; }
 
         .google-auth-bar { background: #f8f9fa; border: 1px solid var(--border-color); padding: 12px; border-radius: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        .auth-status { font-size: 12px; font-weight: 600; color: var(--gray-sub); }
+        .auth-status { font-size: 12px; font-weight: 600; color: var(--gray-sub); flex: 1; }
         .auth-status.online { color: var(--secondary); }
-        .btn-google-login { background: var(--google-blue); color: white; border: none; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .auth-btn-group { display: flex; gap: 6px; }
+        .btn-google-login { background: var(--google-blue); color: white; border: none; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
         .btn-google-login:hover { opacity: 0.9; }
-        .btn-google-login.connected { background: #e2e8f0; color: var(--dark); cursor: default; }
+        .btn-logout { background: #ff4757; }
 
         .btn-update-action { background: var(--update-btn); box-shadow: 0 4px 12px rgba(30, 55, 153, 0.2); }
         .btn-manual-toggle { background: #341f97; box-shadow: 0 4px 12px rgba(52, 31, 151, 0.15); flex: 1; }
@@ -89,8 +90,11 @@
     </div>
 
     <div class="google-auth-bar">
-        <div id="authText" class="auth-status">🔴 ยังไม่ได้เชื่อมต่อบัญชีฟิตเนส</div>
-        <button id="loginGoogleBtn" class="btn-google-login" onclick="requestGoogleAuth()">🔗 Login Google</button>
+        <div id="authText" class="auth-status">🔴 ยังไม่ได้เชื่อมต่อบัญชี</div>
+        <div class="auth-btn-group">
+            <button id="loginGoogleBtn" class="btn-google-login" onclick="requestGoogleAuth()">🔗 Login Google</button>
+            <button id="logoutBtn" class="btn-google-login btn-logout" style="display:none;" onclick="logout()">🚪 Logout</button>
+        </div>
     </div>
 
     <div id="manualPanel" class="manual-expand-panel">
@@ -140,7 +144,6 @@
 </div>
 
 <script>
-    // 🔗 ลิงก์ที่เคยแนบมาครบถ้วน
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxcceccnfFNs2tvvOdB5tFMLKi8wWR5FY5YkOU8dzgFMgAtCdIqsnuPhC6WF6MBL3-8qQ/exec";
     const GOOGLE_CLIENT_ID = "631377617694-b2j4r98uadect1e0idu7rij4ug8an1f9.apps.googleusercontent.com"; 
 
@@ -149,9 +152,46 @@
     let loggedInUser = "B";
 
     document.getElementById('activityDate').valueAsDate = new Date();
+    
+    // โหลดหน้าเว็บปุ๊บ ให้ดึงตารางกลาง + ตรวจสอบสถานะการ Login
     refreshData();
+    checkSession();
 
-    // 🔑 ล็อกอิน & สั่ง Auto Sync ทันที
+    // 🕵️‍♂️ ฟังก์ชันตรวจสอบเซสชัน
+    function checkSession() {
+        const savedToken = localStorage.getItem('fitToken');
+        const savedUser = localStorage.getItem('fitUser');
+        if (savedToken && savedUser) {
+            accessToken = savedToken;
+            loggedInUser = savedUser;
+            updateLoginUI();
+        }
+    }
+
+    // 🚪 ฟังก์ชัน Logout
+    function logout() {
+        localStorage.removeItem('fitToken');
+        localStorage.removeItem('fitUser');
+        accessToken = null;
+        loggedInUser = "B";
+        
+        document.getElementById('authText').innerText = "🔴 ยังไม่ได้เชื่อมต่อบัญชี";
+        document.getElementById('authText').classList.remove('online');
+        document.getElementById('loginGoogleBtn').style.display = "block";
+        document.getElementById('logoutBtn').style.display = "none";
+        document.getElementById('updateBtn').disabled = true;
+    }
+
+    function updateLoginUI() {
+        document.getElementById('authText').innerText = `🟢 เชื่อมต่อแล้ว: บัญชีคุณ ${loggedInUser}`;
+        document.getElementById('authText').classList.add('online');
+        document.getElementById('loginGoogleBtn').style.display = "none";
+        document.getElementById('logoutBtn').style.display = "block";
+        document.getElementById('updateBtn').disabled = false;
+    }
+
+    // 🔑 ล็อกอิน & สั่ง Auto Sync ทันที 
+    // [อัปเดต: เอา prompt: 'consent' ออกแล้ว เพื่อให้ล็อกอินเนียนๆ โดยไม่ต้องถามซ้ำ]
     function requestGoogleAuth() {
         if(typeof google === 'undefined') { alert('กำลังโหลดระบบ Google API กรุณารอสักครู่ครับ'); return; }
         
@@ -168,29 +208,29 @@
                 .then(res => res.json())
                 .then(user => {
                     loggedInUser = user.given_name || "B";
-                    document.getElementById('authText').innerText = `🟢 Auto Sync: บัญชีคุณ ${loggedInUser}`;
-                    document.getElementById('authText').classList.add('online');
-                    document.getElementById('loginGoogleBtn').innerText = "✅ Connected";
-                    document.getElementById('loginGoogleBtn').classList.add('connected');
-                    document.getElementById('updateBtn').disabled = false;
+                    localStorage.setItem('fitToken', accessToken);
+                    localStorage.setItem('fitUser', loggedInUser);
+                    updateLoginUI();
                     fetchFitnessData(); // สั่ง Auto Sync ทำงาน
                 })
                 .catch(() => {
                     loggedInUser = "B";
-                    document.getElementById('authText').innerText = "🟢 เชื่อมต่อสำเร็จ กำลังซิงค์...";
-                    document.getElementById('updateBtn').disabled = false;
-                    fetchFitnessData(); // สั่ง Auto Sync ทำงาน
+                    localStorage.setItem('fitToken', accessToken);
+                    localStorage.setItem('fitUser', loggedInUser);
+                    updateLoginUI();
+                    fetchFitnessData(); 
                 });
             },
         });
-        tokenClient.requestAccessToken({prompt: 'consent'});
+        
+        // ตรงนี้เอาคำสั่งที่บังคับถามซ้ำออกแล้วครับ
+        tokenClient.requestAccessToken();
     }
 
-    // 🏃‍♂️ ดึงข้อมูล เดิน(7), วิ่ง(8) แบบมีระบบป้องกันเงินเบิ้ลซ้ำ และดักจับการล็อกอิน
+    // 🏃‍♂️ ดึงข้อมูล เดิน, วิ่ง, เวท, แบดมินตัน พร้อมเช็กวันหมดอายุ Token
     function fetchFitnessData() {
-        // 🔒 เช็กว่า Login แล้วหรือยัง ถ้ายังให้หยุดการทำงาน
         if (!accessToken) {
-            alert("⚠️ กรุณากดปุ่ม '🔗 Login Google' เพื่อเชื่อมต่อบัญชีก่อนอัปเดตกิจกรรมครับ!");
+            alert("⚠️ กรุณากดปุ่ม '🔗 Login Google' เพื่อเชื่อมต่อบัญชีก่อนครับ!");
             return;
         }
 
@@ -201,7 +241,17 @@
         fetch(`https://www.googleapis.com/fitness/v1/users/me/sessions?startTime=${start.toISOString()}&endTime=${end.toISOString()}`, {
             headers: { 'Authorization': `Bearer ${accessToken}` }
         })
-        .then(res => res.json())
+        .then(res => {
+            // เช็กว่า Token หมดอายุไหม
+            if (!res.ok) {
+                if(res.status === 401) {
+                    logout();
+                    throw new Error("TOKEN_EXPIRED");
+                }
+                throw new Error("API_ERROR");
+            }
+            return res.json();
+        })
         .then(resData => {
             if (resData.session && resData.session.length > 0) {
                 const fitSessions = resData.session.filter(s => [7, 8, 57, 10].includes(Number(s.activityType)));
@@ -214,7 +264,6 @@
                 
                 const lastAct = fitSessions[fitSessions.length - 1];
                 
-                // ระบบป้องกันเงินเบิ้ล (ถ้าจำได้ว่าเคยซิงค์แล้ว จะหยุดการทำงาน)
                 const syncKey = "synced_" + lastAct.startTimeMillis;
                 if(localStorage.getItem(syncKey)) {
                     document.getElementById('tierStatus').innerText = "✅ อัปเดตล่าสุดแล้ว (ไม่มีกิจกรรมใหม่เพิ่ม)";
@@ -244,7 +293,6 @@
                         return;
                     }
                     
-                    // บันทึกความจำลงเครื่องว่าซิงค์ไปแล้ว
                     localStorage.setItem(syncKey, "true"); 
                     sendDataToASheet(loggedInUser, typeName, val.toFixed(1), earned, unit);
                 });
@@ -253,13 +301,17 @@
                 setButtonsState(false);
             }
         })
-        .catch(() => {
-            alert("เชื่อมต่อข้อมูลไม่สำเร็จ");
+        .catch((err) => {
+            if(err.message === "TOKEN_EXPIRED") {
+                alert("เซสชันหมดอายุ กรุณากด Login ใหม่อีกครั้งครับ (ระบบจะไม่ถามสิทธิ์ซ้ำแล้ว) 🔄");
+            } else {
+                alert("เชื่อมต่อข้อมูลไม่สำเร็จ");
+            }
             setButtonsState(false);
         });
     }
 
-    // ฟังก์ชันส่งและรับข้อมูลกับ Google Apps Script
+    // ฟังก์ชันส่งข้อมูลเข้า Google Sheets
     function sendDataToASheet(runner, actName, value, earned, unit) {
         const formattedDate = new Date().toLocaleDateString('th-TH');
         const logText = `⌚ ${actName} (${runner}): ${value} ${unit} (+${earned} บาท)`;
