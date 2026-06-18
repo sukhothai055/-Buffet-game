@@ -24,7 +24,7 @@
         .container { width: 100%; max-width: 480px; background: white; padding: 24px; border-radius: 24px; box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
         
         .top-navbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
-        .top-nav-btn { flex: 1.2; padding: 10px 4px; border-radius: 20px; font-size: 11.5px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; color: white; }
+        .top-nav-btn { flex: 1; padding: 10px 4px; border-radius: 20px; font-size: 12.5px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; color: white; }
         .top-nav-btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .top-nav-btn:disabled { background: #ccc !important; cursor: not-allowed; }
 
@@ -37,9 +37,7 @@
         .btn-logout { background: #ff4757; }
 
         .btn-update-action { background: var(--update-btn); box-shadow: 0 4px 12px rgba(30, 55, 153, 0.2); }
-        .btn-manual-toggle { background: #341f97; box-shadow: 0 4px 12px rgba(52, 31, 151, 0.15); flex: 1; }
-        .btn-reset-mini { background: #dfe4ea; color: var(--gray-sub); flex: 0.6; }
-        .btn-reset-mini:hover { color: var(--primary); background: #ced6e0; transform: translateY(-1px); }
+        .btn-manual-toggle { background: #341f97; box-shadow: 0 4px 12px rgba(52, 31, 151, 0.15); }
 
         .manual-expand-panel { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, margin-bottom 0.4s ease-out, padding 0.4s ease-out; background: #f8f9fa; border-radius: 18px; border: 1px solid transparent; }
         .manual-expand-panel.open { max-height: 1000px; margin-bottom: 20px; padding: 14px; border-color: var(--border-color); }
@@ -50,7 +48,9 @@
         .dashboard.debt { background: linear-gradient(135deg, #747d8c, #a4b0be); box-shadow: 0 8px 24px rgba(116, 125, 140, 0.2); }
         .dashboard p { font-size: 13px; opacity: 0.85; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
         .total-amount { font-size: 46px; font-weight: 800; margin: 6px 0; }
-        #tierStatus { font-size: 13px; font-weight: 600; background: rgba(255, 255, 255, 0.2); padding: 4px 12px; border-radius: 12px; display: inline-block; margin-top: 4px; }
+        .user-balances { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .user-badge { background: rgba(255, 255, 255, 0.25); padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 700; }
+        #tierStatus { font-size: 13px; font-weight: 600; background: rgba(0, 0, 0, 0.15); padding: 4px 12px; border-radius: 12px; display: inline-block; margin-top: 12px; }
         
         .calendar-card { background: white; border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 10px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .calendar-card label { font-size: 12px; font-weight: 700; color: #555; }
@@ -73,10 +73,13 @@
         
         .history { margin-top: 28px; }
         .history h3 { border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; font-size: 14px; color: var(--gray-sub); font-weight: 700; }
-        .history-list { max-height: 220px; overflow-y: auto; list-style: none; }
+        .history-list { max-height: 250px; overflow-y: auto; list-style: none; }
         .history-item { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; font-weight: 600; border-left: 4px solid var(--secondary); }
         .history-item.reduced { border-left: 4px solid var(--warning); }
-        .history-item small { color: #a4b0be; font-weight: 500; }
+        
+        /* ปุ่มลบประวัติ */
+        .btn-delete-item { background: #ffeaa7; border: none; color: #e17055; border-radius: 8px; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: 0.2s; }
+        .btn-delete-item:hover { background: #ff7675; color: white; transform: scale(1.1); }
         .loading { text-align: center; font-size: 14px; color: #ff4757; margin-bottom: 10px; font-weight: bold; }
     </style>
 </head>
@@ -86,7 +89,6 @@
     <div class="top-navbar">
         <button id="updateBtn" class="top-nav-btn btn-update-action action-btn" onclick="fetchFitnessData()" disabled>🔄 Update Activities</button>
         <button class="top-nav-btn btn-manual-toggle action-btn" onclick="togglePanel('manualPanel')">➕ เพิ่มด้วยตัวเอง</button>
-        <button class="top-nav-btn btn-reset-mini" id="resetBtn" onclick="secureReset()">🗑️ รีเซ็ต</button>
     </div>
 
     <div class="google-auth-bar">
@@ -124,9 +126,11 @@
     <h1>⌚ เปลี่ยนเหงื่อเป็นบุฟเฟ่ต์ 🍖</h1>
     
     <div id="dashboardArea" class="dashboard">
-        <p>เงินกองกลางสะสมตอนนี้</p>
+        <p>เงินกองกลางสะสมทั้งหมด</p>
         <div class="total-amount"><span id="totalMoney">0</span> ฿</div>
-        <span id="tierStatus">🔄 กำลังเชื่อมต่อตารางข้อมูล...</span>
+        <div id="userBalances" class="user-balances">
+            </div>
+        <div id="tierStatus">🔄 กำลังเชื่อมต่อตารางข้อมูล...</div>
     </div>
 
     <div id="loadingStatus" class="loading" style="display:none;">⏳ กำลังรับส่งข้อมูลแบบ Real-time...</div>
@@ -138,13 +142,16 @@
     </div>
 
     <div class="history">
-        <h3>📜 ประวัติการสะสมทุน</h3>
+        <h3>📜 ประวัติการสะสมทุน (ลบรายอันได้)</h3>
         <ul id="historyList" class="history-list"></ul>
     </div>
 </div>
 
 <script>
+    // ⚠️ 1. วาง WEB_APP_URL ใหม่ที่ได้จากการ Deploy ทับลงตรงนี้!
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxcceccnfFNs2tvvOdB5tFMLKi8wWR5FY5YkOU8dzgFMgAtCdIqsnuPhC6WF6MBL3-8qQ/exec";
+    
+    // ⚠️ 2. Client ID เดิมของคุณ
     const GOOGLE_CLIENT_ID = "631377617694-b2j4r98uadect1e0idu7rij4ug8an1f9.apps.googleusercontent.com"; 
 
     let tokenClient;
@@ -153,11 +160,9 @@
 
     document.getElementById('activityDate').valueAsDate = new Date();
     
-    // โหลดหน้าเว็บปุ๊บ ให้ดึงตารางกลาง + ตรวจสอบสถานะการ Login
     refreshData();
     checkSession();
 
-    // 🕵️‍♂️ ฟังก์ชันตรวจสอบเซสชัน
     function checkSession() {
         const savedToken = localStorage.getItem('fitToken');
         const savedUser = localStorage.getItem('fitUser');
@@ -168,13 +173,11 @@
         }
     }
 
-    // 🚪 ฟังก์ชัน Logout
     function logout() {
         localStorage.removeItem('fitToken');
         localStorage.removeItem('fitUser');
         accessToken = null;
         loggedInUser = "B";
-        
         document.getElementById('authText').innerText = "🔴 ยังไม่ได้เชื่อมต่อบัญชี";
         document.getElementById('authText').classList.remove('online');
         document.getElementById('loginGoogleBtn').style.display = "block";
@@ -183,15 +186,13 @@
     }
 
     function updateLoginUI() {
-        document.getElementById('authText').innerText = `🟢 เชื่อมต่อแล้ว: บัญชีคุณ ${loggedInUser}`;
+        document.getElementById('authText').innerText = `🟢 บัญชีคุณ: ${loggedInUser}`;
         document.getElementById('authText').classList.add('online');
         document.getElementById('loginGoogleBtn').style.display = "none";
         document.getElementById('logoutBtn').style.display = "block";
         document.getElementById('updateBtn').disabled = false;
     }
 
-    // 🔑 ล็อกอิน & สั่ง Auto Sync ทันที 
-    // [อัปเดต: เอา prompt: 'consent' ออกแล้ว เพื่อให้ล็อกอินเนียนๆ โดยไม่ต้องถามซ้ำ]
     function requestGoogleAuth() {
         if(typeof google === 'undefined') { alert('กำลังโหลดระบบ Google API กรุณารอสักครู่ครับ'); return; }
         
@@ -211,7 +212,7 @@
                     localStorage.setItem('fitToken', accessToken);
                     localStorage.setItem('fitUser', loggedInUser);
                     updateLoginUI();
-                    fetchFitnessData(); // สั่ง Auto Sync ทำงาน
+                    fetchFitnessData(); 
                 })
                 .catch(() => {
                     loggedInUser = "B";
@@ -222,12 +223,9 @@
                 });
             },
         });
-        
-        // ตรงนี้เอาคำสั่งที่บังคับถามซ้ำออกแล้วครับ
         tokenClient.requestAccessToken();
     }
 
-    // 🏃‍♂️ ดึงข้อมูล เดิน, วิ่ง, เวท, แบดมินตัน พร้อมเช็กวันหมดอายุ Token
     function fetchFitnessData() {
         if (!accessToken) {
             alert("⚠️ กรุณากดปุ่ม '🔗 Login Google' เพื่อเชื่อมต่อบัญชีก่อนครับ!");
@@ -242,12 +240,8 @@
             headers: { 'Authorization': `Bearer ${accessToken}` }
         })
         .then(res => {
-            // เช็กว่า Token หมดอายุไหม
             if (!res.ok) {
-                if(res.status === 401) {
-                    logout();
-                    throw new Error("TOKEN_EXPIRED");
-                }
+                if(res.status === 401) { logout(); throw new Error("TOKEN_EXPIRED"); }
                 throw new Error("API_ERROR");
             }
             return res.json();
@@ -255,15 +249,12 @@
         .then(resData => {
             if (resData.session && resData.session.length > 0) {
                 const fitSessions = resData.session.filter(s => [7, 8, 57, 10].includes(Number(s.activityType)));
-                
                 if(fitSessions.length === 0) {
                     alert(`อัปเดตล่าสุดแล้ว: วันนี้ยังไม่มีกิจกรรมเข้าในระบบครับ`);
                     setButtonsState(false);
                     return;
                 }
-                
                 const lastAct = fitSessions[fitSessions.length - 1];
-                
                 const syncKey = "synced_" + lastAct.startTimeMillis;
                 if(localStorage.getItem(syncKey)) {
                     document.getElementById('tierStatus').innerText = "✅ อัปเดตล่าสุดแล้ว (ไม่มีกิจกรรมใหม่เพิ่ม)";
@@ -292,9 +283,8 @@
                         setButtonsState(false);
                         return;
                     }
-                    
                     localStorage.setItem(syncKey, "true"); 
-                    sendDataToASheet(loggedInUser, typeName, val.toFixed(1), earned, unit);
+                    sendDataToASheet(typeName, val.toFixed(1), earned, unit);
                 });
             } else {
                 alert(`ไม่มีข้อมูลกิจกรรมในวันนี้ครับ`);
@@ -302,28 +292,34 @@
             }
         })
         .catch((err) => {
-            if(err.message === "TOKEN_EXPIRED") {
-                alert("เซสชันหมดอายุ กรุณากด Login ใหม่อีกครั้งครับ (ระบบจะไม่ถามสิทธิ์ซ้ำแล้ว) 🔄");
-            } else {
-                alert("เชื่อมต่อข้อมูลไม่สำเร็จ");
-            }
+            if(err.message === "TOKEN_EXPIRED") alert("เซสชันหมดอายุ กรุณากด Login ใหม่อีกครั้งครับ 🔄");
+            else alert("เชื่อมต่อข้อมูลไม่สำเร็จ");
             setButtonsState(false);
         });
     }
 
-    // ฟังก์ชันส่งข้อมูลเข้า Google Sheets
-    function sendDataToASheet(runner, actName, value, earned, unit) {
+    // 📤 ส่งข้อมูลเข้า Google Sheets (แนบชื่อ user ไปด้วยเพื่อแยกบัญชี)
+    function sendDataToASheet(actName, value, earned, unit) {
         const formattedDate = new Date().toLocaleDateString('th-TH');
-        const logText = `⌚ ${actName} (${runner}): ${value} ${unit} (+${earned} บาท)`;
+        const logText = `⌚ ${actName}: ${value} ${unit} (+${earned} บาท)`;
         const script = document.createElement('script');
-        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&text=${encodeURIComponent(logText)}&amount=${earned}&callback=handleData&_ts=${Date.now()}`;
+        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&user=${encodeURIComponent(loggedInUser)}&text=${encodeURIComponent(logText)}&amount=${earned}&callback=handleData&_ts=${Date.now()}`;
         document.body.appendChild(script); script.remove();
-        alert(`🎉 บันทึกกิจกรรมของ ${runner} ลงคลังเรียบร้อย!`);
+        alert(`🎉 บันทึกกิจกรรมของ ${loggedInUser} ลงคลังเรียบร้อย!`);
+    }
+
+    // 🗑️ ฟังก์ชันลบกิจกรรมรายอัน
+    function deleteActivity(id) {
+        if(confirm("คุณต้องการลบรายการนี้ใช่หรือไม่? (ยอดเงินจะถูกหักออก)")) {
+            setButtonsState(true);
+            const script = document.createElement('script');
+            script.src = `${WEB_APP_URL}?action=delete&id=${id}&callback=handleData&_ts=${Date.now()}`;
+            document.body.appendChild(script); script.remove();
+        }
     }
 
     function setButtonsState(disabled) {
         document.querySelectorAll('.action-btn').forEach(btn => btn.disabled = disabled);
-        document.getElementById('resetBtn').disabled = disabled;
         document.getElementById('loadingStatus').style.display = disabled ? 'block' : 'none';
     }
 
@@ -338,26 +334,48 @@
 
     function handleData(response) {
         if (!response) return;
-        document.getElementById('totalMoney').innerText = (response.totalMoney || 0).toLocaleString();
+        
+        // อัปเดตยอดรวมทั้งหมด
+        document.getElementById('totalMoney').innerText = (response.totalAll || 0).toLocaleString();
+        
+        // อัปเดตยอดแยกรายคน
+        const userBalDiv = document.getElementById('userBalances');
+        userBalDiv.innerHTML = '';
+        if (response.totals) {
+            for (const [user, amount] of Object.entries(response.totals)) {
+                if(user !== "Unknown" && user !== "") {
+                    userBalDiv.innerHTML += `<div class="user-badge">👤 ${user}: ${amount.toLocaleString()} ฿</div>`;
+                }
+            }
+        }
+
         const dashboard = document.getElementById('dashboardArea');
         let statusText = "🎯 เริ่มสะสมเพื่อมื้ออร่อย!";
-        
-        if (response.totalMoney < 0) {
+        if (response.totalAll < 0) {
             dashboard.classList.add('debt');
-            statusText = "🚨 อยู่ในช่วงติดหนี้! ต้องรีบไปออกกำลังกายเพื่อชดใช้กรรมด่วน!";
+            statusText = "🚨 อยู่ในช่วงติดหนี้! รีบออกกำลังกายเพื่อชดใช้ด่วน!";
         } else {
             dashboard.classList.remove('debt');
-            if (response.totalMoney >= 3000) statusText = "👑 ระดับ Gold: ชาบูพรีเมียม / โรงแรมหรูจัดเต็ม!";
-            else if (response.totalMoney >= 1500) statusText = "🥩 ระดับ Silver: ปิ้งย่างเกาหลี / แซลมอนในห้างได้แล้ว!";
-            else if (response.totalMoney >= 600) statusText = "🐷 ระดับ Bronze: ชาบู/หมูกระทะแถวบ้านอิ่ม ๆ เลย!";
+            if (response.totalAll >= 3000) statusText = "👑 ระดับ Gold: ชาบูพรีเมียม / โรงแรมหรูจัดเต็ม!";
+            else if (response.totalAll >= 1500) statusText = "🥩 ระดับ Silver: ปิ้งย่างเกาหลี / แซลมอนในห้าง!";
+            else if (response.totalAll >= 600) statusText = "🐷 ระดับ Bronze: ชาบู/หมูกระทะแถวบ้านอิ่มๆ!";
         }
         document.getElementById('tierStatus').innerText = statusText;
 
+        // วาดรายการประวัติพร้อมปุ่มลบ (❌)
         const listElement = document.getElementById('historyList'); listElement.innerHTML = '';
         if (response.historyData && response.historyData.length > 0) {
             response.historyData.forEach(item => {
-                const li = document.createElement('li'); li.className = item.isReduced ? 'history-item reduced' : 'history-item';
-                li.innerHTML = `<span>${item.text}</span> <small style="color:#999">${item.date}</small>`;
+                const li = document.createElement('li'); 
+                li.className = item.isReduced ? 'history-item reduced' : 'history-item';
+                
+                li.innerHTML = `
+                    <div style="flex:1;">
+                        <span style="font-size: 13.5px;">${item.text}</span><br>
+                        <small style="color:#999">${item.date} • โดย ${item.user}</small>
+                    </div>
+                    <button class="btn-delete-item action-btn" onclick="deleteActivity('${item.id}')">❌</button>
+                `;
                 listElement.appendChild(li);
             });
         } else {
@@ -366,7 +384,7 @@
         setButtonsState(false);
     }
 
-    // ฟังก์ชันกรอกข้อมูลเองและรีเซ็ต
+    // ฟังก์ชันเพิ่มกิจกรรม (มือ)
     function addActivity(type, inputId, rate, unit) {
         const inputElement = document.getElementById(inputId); const value = parseFloat(inputElement.value);
         if (isNaN(value) || value <= 0) { alert('กรุณากรอกตัวเลขที่มากกว่า 0 นะครับ'); return; }
@@ -375,11 +393,12 @@
         const rawDate = document.getElementById('activityDate').value;
         const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString('th-TH') : new Date().toLocaleDateString('th-TH');
         const script = document.createElement('script');
-        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&text=${encodeURIComponent(`✍️ ${type} (คีย์มือ): ${value} ${unit} (+${earned} บาท)`)}&amount=${earned}&callback=handleData&_ts=${Date.now()}`;
+        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&user=${encodeURIComponent(loggedInUser)}&text=${encodeURIComponent(`✍️ ${type} (คีย์มือ): ${value} ${unit} (+${earned} บาท)`)}&amount=${earned}&callback=handleData&_ts=${Date.now()}`;
         document.body.appendChild(script); script.remove();
         inputElement.value = '';
     }
 
+    // ฟังก์ชันหักค่าใช้จ่าย
     function deductExpense() {
         const expenseInput = document.getElementById('expenseInput'); const amount = Math.round(parseFloat(expenseInput.value));
         if (isNaN(amount) || amount <= 0) { alert('กรุณากรอกจำนวนเงินที่ถูกต้องครับ'); return; }
@@ -387,22 +406,9 @@
         const rawDate = document.getElementById('activityDate').value;
         const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString('th-TH') : new Date().toLocaleDateString('th-TH');
         const script = document.createElement('script');
-        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&text=${encodeURIComponent(`🔻 ถอนเงินกองกลาง (-${amount} บาท)`)}&amount=${-amount}&callback=handleData&_ts=${Date.now()}`;
+        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&user=${encodeURIComponent(loggedInUser)}&text=${encodeURIComponent(`🔻 ถอนเงิน (-${amount} บาท)`)}&amount=${-amount}&callback=handleData&_ts=${Date.now()}`;
         document.body.appendChild(script); script.remove();
         expenseInput.value = '';
-    }
-
-    function secureReset() {
-        const password = prompt('กรุณากรอกรหัสผ่านเพื่อรีเซ็ตเกม:');
-        if (password === '1234') {
-            if (confirm('ยืนยันที่จะล้างข้อมูลทั้งหมดบนตาราง Google Sheets ใช่ไหม?')) {
-                setButtonsState(true);
-                const script = document.createElement('script');
-                script.src = `${WEB_APP_URL}?action=reset&callback=handleData&_ts=${Date.now()}`;
-                document.body.appendChild(script); script.remove();
-                alert('รีเซ็ตระบบเรียบร้อยแล้ว!');
-            }
-        } else if (password !== null) { alert('รหัสผ่านไม่ถูกต้อง!'); }
     }
 </script>
 </body>
