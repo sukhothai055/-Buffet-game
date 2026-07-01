@@ -48,8 +48,6 @@
         .dashboard.debt { background: linear-gradient(135deg, #747d8c, #a4b0be); box-shadow: 0 8px 24px rgba(116, 125, 140, 0.2); }
         .dashboard p { font-size: 13px; opacity: 0.85; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
         .total-amount { font-size: 46px; font-weight: 800; margin: 6px 0; }
-        .user-balances { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-        .user-badge { background: rgba(255, 255, 255, 0.25); padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 700; }
         #tierStatus { font-size: 13px; font-weight: 600; background: rgba(0, 0, 0, 0.15); padding: 4px 12px; border-radius: 12px; display: inline-block; margin-top: 12px; }
         
         .calendar-card { background: white; border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 10px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -127,8 +125,6 @@
     <div id="dashboardArea" class="dashboard">
         <p>เงินกองกลางสะสมทั้งหมด</p>
         <div class="total-amount"><span id="totalMoney">0</span> ฿</div>
-        <div id="userBalances" class="user-balances">
-            </div>
         <div id="tierStatus">🔄 กรุณาล็อกอินเพื่อดูข้อมูล...</div>
     </div>
 
@@ -177,7 +173,6 @@
     // 🧹 ฟังก์ชันเคลียร์หน้าจอเป็น 0 เมื่อยังไม่ Login หรือกด Logout
     function clearDashboard() {
         document.getElementById('totalMoney').innerText = "0";
-        document.getElementById('userBalances').innerHTML = "";
         document.getElementById('dashboardArea').classList.remove('debt');
         document.getElementById('tierStatus').innerText = "🔒 กรุณาล็อกอินเพื่อดูข้อมูลตารางกองกลาง";
         document.getElementById('historyList').innerHTML = '<li class="history-item" style="border-left:4px solid #ccc; justify-content:center;"><span>กรุณาล็อกอินเพื่อดูประวัติ</span></li>';
@@ -316,7 +311,7 @@
         const script = document.createElement('script');
         script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&user=${encodeURIComponent(loggedInUser)}&text=${encodeURIComponent(logText)}&amount=${earned}&callback=handleData&_ts=${Date.now()}`;
         document.body.appendChild(script); script.remove();
-        alert(`🎉 บันทึกกิจกรรมอัตโนมัติของ ${loggedInUser} เรียบร้อย!`);
+        alert(`🎉 บันทึกกิจกรรมอัตโนมัติเรียบร้อย!`);
     }
 
     // 🗑️ ฟังก์ชันลบกิจกรรมรายอัน (ดักจับการ Login)
@@ -353,16 +348,6 @@
         
         document.getElementById('totalMoney').innerText = (response.totalAll || 0).toLocaleString();
         
-        const userBalDiv = document.getElementById('userBalances');
-        userBalDiv.innerHTML = '';
-        if (response.totals) {
-            for (const [user, amount] of Object.entries(response.totals)) {
-                if(user !== "Unknown" && user !== "") {
-                    userBalDiv.innerHTML += `<div class="user-badge">👤 ${user}: ${amount.toLocaleString()} ฿</div>`;
-                }
-            }
-        }
-
         const dashboard = document.getElementById('dashboardArea');
         let statusText = "🎯 เริ่มสะสมเพื่อมื้ออร่อย!";
         if (response.totalAll < 0) {
@@ -382,10 +367,11 @@
                 const li = document.createElement('li'); 
                 li.className = item.isReduced ? 'history-item reduced' : 'history-item';
                 
+                // นำส่วนที่แสดง "โดย ชื่อuser" ออกแล้ว
                 li.innerHTML = `
                     <div style="flex:1;">
                         <span style="font-size: 13.5px;">${item.text}</span><br>
-                        <small style="color:#999">${item.date} • โดย ${item.user}</small>
+                        <small style="color:#999">${item.date}</small>
                     </div>
                     <button class="btn-delete-item action-btn" onclick="deleteActivity('${item.id}')">❌</button>
                 `;
