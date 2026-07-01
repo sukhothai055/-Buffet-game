@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buffet Fitness Challenge ⌚🍖</title>
+    <!-- โหลด Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
@@ -59,12 +60,12 @@
         .expense-card { background: #fffdf6; border: 1px solid #ffeaa7; padding: 16px; border-radius: 16px; margin-top: 10px; margin-bottom: 24px; }
         .expense-card h3 { margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #e67e22; }
         
-        .form-group { display: flex; align-items: center; gap: 10px; }
-        input[type="number"] { flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 8px; font-size: 15px; font-weight: 600; outline: none; background: #f8f9fa; }
-        input[type="number"]:focus { border-color: var(--primary); background: white; }
+        .form-group { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        input[type="number"], input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none; background: #f8f9fa; }
+        input[type="number"]:focus, input[type="text"]:focus { border-color: var(--primary); background: white; }
         .unit { font-weight: 700; color: var(--gray-sub); width: 40px; font-size: 13px; }
         
-        button.btn-add-act { width: 100%; padding: 10px; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+        button.btn-add-act { width: 100%; padding: 10px; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 4px; }
         button.btn-add-act:disabled { background: #ccc !important; cursor: not-allowed; }
         .btn-add { background: var(--secondary); }
         .btn-expense { background: var(--warning); box-shadow: 0 4px 12px rgba(255, 165, 2, 0.2); }
@@ -88,6 +89,7 @@
         <button class="top-nav-btn btn-manual-toggle action-btn" onclick="togglePanel('manualPanel')">➕ เพิ่มด้วยตัวเอง</button>
     </div>
 
+    <!-- แถบ Login ที่มีปุ่ม Logout -->
     <div class="google-auth-bar">
         <div id="authText" class="auth-status">🔴 ยังไม่ได้เชื่อมต่อบัญชี</div>
         <div class="auth-btn-group">
@@ -122,6 +124,7 @@
 
     <h1>⌚ เปลี่ยนเหงื่อเป็นบุฟเฟ่ต์ 🍖</h1>
     
+    <!-- แสดงยอดรวมทั้งหมด (ซ่อนยอดแยกบัญชีออกไปแล้ว) -->
     <div id="dashboardArea" class="dashboard">
         <p>เงินกองกลางสะสมทั้งหมด</p>
         <div class="total-amount"><span id="totalMoney">0</span> ฿</div>
@@ -132,14 +135,21 @@
 
     <div class="expense-card">
         <h3>💸 บันทึกค่าใช้จ่าย / ถอนเงินกองกลาง</h3>
-        <div class="form-group"><input type="number" id="expenseInput" placeholder="กรอกจำนวนเงินที่ใช้" min="1"><span class="unit">บาท</span></div>
+        <!-- ช่องระบุชื่อร้านอาหาร -->
+        <div class="form-group">
+            <input type="text" id="restaurantInput" placeholder="ระบุชื่อร้านอาหาร (ถ้ามี)">
+        </div>
+        <div class="form-group">
+            <input type="number" id="expenseInput" placeholder="กรอกจำนวนเงินที่ใช้" min="1"><span class="unit">บาท</span>
+        </div>
         <button class="btn-expense btn-add-act action-btn" onclick="deductExpense()">บันทึกค่าใช้จ่าย (ลบเงินคลัง)</button>
     </div>
 
     <div class="history">
         <h3>📜 ประวัติการสะสมทุน (ลบรายอันได้)</h3>
         <ul id="historyList" class="history-list">
-            </ul>
+            <!-- ประวัติจะถูกโหลดมาตรงนี้เมื่อล็อกอิน -->
+        </ul>
     </div>
 </div>
 
@@ -367,7 +377,6 @@
                 const li = document.createElement('li'); 
                 li.className = item.isReduced ? 'history-item reduced' : 'history-item';
                 
-                // นำส่วนที่แสดง "โดย ชื่อuser" ออกแล้ว
                 li.innerHTML = `
                     <div style="flex:1;">
                         <span style="font-size: 13.5px;">${item.text}</span><br>
@@ -399,19 +408,27 @@
         inputElement.value = '';
     }
 
-    // 💸 หักค่าใช้จ่าย - ดักจับการ Login
+    // 💸 หักค่าใช้จ่าย - ดักจับการ Login และรวมชื่อร้าน
     function deductExpense() {
         if (!accessToken) { alert("⚠️ กรุณา '🔗 Login Google' ก่อนทำการบันทึกค่าใช้จ่ายครับ!"); return; }
         
         const expenseInput = document.getElementById('expenseInput'); const amount = Math.round(parseFloat(expenseInput.value));
+        const restaurantInput = document.getElementById('restaurantInput'); const restaurant = restaurantInput.value.trim();
+        
         if (isNaN(amount) || amount <= 0) { alert('กรุณากรอกจำนวนเงินที่ถูกต้องครับ'); return; }
         setButtonsState(true);
         const rawDate = document.getElementById('activityDate').value;
         const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString('th-TH') : new Date().toLocaleDateString('th-TH');
+        
+        // เช็กว่ามีการระบุชื่อร้านหรือไม่ เพื่อจัดรูปแบบข้อความ
+        const textLog = restaurant ? `🔻 ถอนเงินไปกิน ${restaurant} (-${amount} บาท)` : `🔻 ถอนเงิน (-${amount} บาท)`;
+        
         const script = document.createElement('script');
-        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&user=${encodeURIComponent(loggedInUser)}&text=${encodeURIComponent(`🔻 ถอนเงิน (-${amount} บาท)`)}&amount=${-amount}&callback=handleData&_ts=${Date.now()}`;
+        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&user=${encodeURIComponent(loggedInUser)}&text=${encodeURIComponent(textLog)}&amount=${-amount}&callback=handleData&_ts=${Date.now()}`;
         document.body.appendChild(script); script.remove();
+        
         expenseInput.value = '';
+        restaurantInput.value = '';
     }
 </script>
 </body>
