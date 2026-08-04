@@ -124,7 +124,7 @@
 
     <h1>⌚ เปลี่ยนเหงื่อเป็นบุฟเฟ่ต์ 🍖</h1>
     
-    <!-- แสดงยอดรวมทั้งหมด (ซ่อนยอดแยกบัญชีออกไปแล้ว) -->
+    <!-- แสดงยอดรวมทั้งหมด -->
     <div id="dashboardArea" class="dashboard">
         <p>เงินกองกลางสะสมทั้งหมด</p>
         <div class="total-amount"><span id="totalMoney">0</span> ฿</div>
@@ -163,10 +163,8 @@
 
     document.getElementById('activityDate').valueAsDate = new Date();
     
-    // โหลดหน้าเว็บปุ๊บ ให้ตรวจเช็กเลยว่าเคย Login ไว้หรือไม่
     checkSession();
 
-    // 🕵️‍♂️ ฟังก์ชันตรวจสอบเซสชัน
     function checkSession() {
         const savedToken = localStorage.getItem('fitToken');
         const savedUser = localStorage.getItem('fitUser');
@@ -174,13 +172,12 @@
             accessToken = savedToken;
             loggedInUser = savedUser;
             updateLoginUI();
-            refreshData(); // โหลดข้อมูลกระดานมาโชว์ เพราะล็อกอินแล้ว
+            refreshData(); 
         } else {
-            clearDashboard(); // ถ้ายังไม่ล็อกอิน ให้ปรับเป็น 0 ทั้งหมด
+            clearDashboard(); 
         }
     }
 
-    // 🧹 ฟังก์ชันเคลียร์หน้าจอเป็น 0 เมื่อยังไม่ Login หรือกด Logout
     function clearDashboard() {
         document.getElementById('totalMoney').innerText = "0";
         document.getElementById('dashboardArea').classList.remove('debt');
@@ -188,7 +185,6 @@
         document.getElementById('historyList').innerHTML = '<li class="history-item" style="border-left:4px solid #ccc; justify-content:center;"><span>กรุณาล็อกอินเพื่อดูประวัติ</span></li>';
     }
 
-    // 🚪 ฟังก์ชัน Logout
     function logout() {
         localStorage.removeItem('fitToken');
         localStorage.removeItem('fitUser');
@@ -200,7 +196,7 @@
         document.getElementById('logoutBtn').style.display = "none";
         document.getElementById('updateBtn').disabled = true;
         
-        clearDashboard(); // เรียกใช้ฟังก์ชันล้างหน้าจอเป็น 0
+        clearDashboard(); 
     }
 
     function updateLoginUI() {
@@ -211,7 +207,6 @@
         document.getElementById('updateBtn').disabled = false;
     }
 
-    // 🔑 ล็อกอิน & สั่ง Auto Sync
     function requestGoogleAuth() {
         if(typeof google === 'undefined') { alert('กำลังโหลดระบบ Google API กรุณารอสักครู่ครับ'); return; }
         
@@ -231,8 +226,8 @@
                     localStorage.setItem('fitToken', accessToken);
                     localStorage.setItem('fitUser', loggedInUser);
                     updateLoginUI();
-                    refreshData(); // โหลดกระดานขึ้นมาก่อน
-                    fetchFitnessData(); // ดึงกิจกรรมล่าสุดมาเสริม
+                    refreshData(); 
+                    fetchFitnessData(); 
                 })
                 .catch(() => {
                     loggedInUser = "B";
@@ -247,7 +242,6 @@
         tokenClient.requestAccessToken();
     }
 
-    // 🏃‍♂️ ดึงข้อมูลจาก Google Fit
     function fetchFitnessData() {
         if (!accessToken) {
             alert("⚠️ กรุณากดปุ่ม '🔗 Login Google' เพื่อเชื่อมต่อบัญชีก่อนครับ!");
@@ -324,7 +318,6 @@
         alert(`🎉 บันทึกกิจกรรมอัตโนมัติเรียบร้อย!`);
     }
 
-    // 🗑️ ฟังก์ชันลบกิจกรรมรายอัน (ดักจับการ Login)
     function deleteActivity(id) {
         if (!accessToken) { alert("⚠️ กรุณาล็อกอินก่อนลบข้อมูลครับ!"); return; }
         
@@ -353,7 +346,6 @@
     function handleData(response) {
         if (!response) return;
         
-        // ถ้าไม่ล็อกอินอยู่ ไม่ต้องโชว์ข้อมูลที่โหลดมา (กันเหนียว)
         if (!accessToken) return;
         
         document.getElementById('totalMoney').innerText = (response.totalAll || 0).toLocaleString();
@@ -392,7 +384,7 @@
         setButtonsState(false);
     }
 
-    // ✍️ เพิ่มกิจกรรม (มือ) - ดักจับการ Login
+    // ✍️ เพิ่มกิจกรรม (มือ) - แก้ไขปัญหา Timezone วันที่เลื่อน
     function addActivity(type, inputId, rate, unit) {
         if (!accessToken) { alert("⚠️ กรุณา '🔗 Login Google' ก่อนทำการบันทึกข้อมูลครับ!"); return; }
         
@@ -400,15 +392,24 @@
         if (isNaN(value) || value <= 0) { alert('กรุณากรอกตัวเลขที่มากกว่า 0 นะครับ'); return; }
         const earned = Math.round(value * rate); if (earned <= 0) { alert('ยอดเงินน้อยเกินไป ระบบไม่บันทึกครับ'); return; }
         setButtonsState(true);
+        
         const rawDate = document.getElementById('activityDate').value;
-        const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString('th-TH') : new Date().toLocaleDateString('th-TH');
+        let formattedDate;
+        if (rawDate) {
+            // จับแยก ปี-เดือน-วัน แล้วสร้าง Date ใหม่ด้วย Local Time ป้องกันวันที่เลื่อน
+            const [y, m, d] = rawDate.split('-');
+            formattedDate = new Date(y, m - 1, d).toLocaleDateString('th-TH');
+        } else {
+            formattedDate = new Date().toLocaleDateString('th-TH');
+        }
+
         const script = document.createElement('script');
         script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&user=${encodeURIComponent(loggedInUser)}&text=${encodeURIComponent(`✍️ ${type} (คีย์มือ): ${value} ${unit} (+${earned} บาท)`)}&amount=${earned}&callback=handleData&_ts=${Date.now()}`;
         document.body.appendChild(script); script.remove();
         inputElement.value = '';
     }
 
-    // 💸 หักค่าใช้จ่าย - ดักจับการ Login และรวมชื่อร้าน
+    // 💸 หักค่าใช้จ่าย - แก้ไขปัญหา Timezone วันที่เลื่อน
     function deductExpense() {
         if (!accessToken) { alert("⚠️ กรุณา '🔗 Login Google' ก่อนทำการบันทึกค่าใช้จ่ายครับ!"); return; }
         
@@ -417,10 +418,17 @@
         
         if (isNaN(amount) || amount <= 0) { alert('กรุณากรอกจำนวนเงินที่ถูกต้องครับ'); return; }
         setButtonsState(true);
-        const rawDate = document.getElementById('activityDate').value;
-        const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString('th-TH') : new Date().toLocaleDateString('th-TH');
         
-        // เช็กว่ามีการระบุชื่อร้านหรือไม่ เพื่อจัดรูปแบบข้อความ
+        const rawDate = document.getElementById('activityDate').value;
+        let formattedDate;
+        if (rawDate) {
+            // จับแยก ปี-เดือน-วัน แล้วสร้าง Date ใหม่ด้วย Local Time ป้องกันวันที่เลื่อน
+            const [y, m, d] = rawDate.split('-');
+            formattedDate = new Date(y, m - 1, d).toLocaleDateString('th-TH');
+        } else {
+            formattedDate = new Date().toLocaleDateString('th-TH');
+        }
+        
         const textLog = restaurant ? `🔻 ถอนเงินไปกิน ${restaurant} (-${amount} บาท)` : `🔻 ถอนเงิน (-${amount} บาท)`;
         
         const script = document.createElement('script');
