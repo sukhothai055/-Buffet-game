@@ -147,15 +147,16 @@
 
     <div class="history">
         <h3>📜 ประวัติการสะสมทุน (ลบรายอันได้)</h3>
-        <ul id="historyList" class="history-list">
-            <!-- ประวัติจะถูกโหลดมาตรงนี้เมื่อล็อกอิน -->
-        </ul>
+        <ul id="historyList" class="history-list"></ul>
     </div>
 </div>
 
 <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxcceccnfFNs2tvvOdB5tFMLKi8wWR5FY5YkOU8dzgFMgAtCdIqsnuPhC6WF6MBL3-8qQ/exec";
     const GOOGLE_CLIENT_ID = "631377617694-b2j4r98uadect1e0idu7rij4ug8an1f9.apps.googleusercontent.com"; 
+    
+    // ตั้งค่า Format วันที่แบบ วัน เดือน ปี (เช่น วันอังคารที่ 4 สิงหาคม 2569)
+    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
     let tokenClient;
     let accessToken = null;
@@ -195,7 +196,6 @@
         document.getElementById('loginGoogleBtn').style.display = "block";
         document.getElementById('logoutBtn').style.display = "none";
         document.getElementById('updateBtn').disabled = true;
-        
         clearDashboard(); 
     }
 
@@ -310,7 +310,8 @@
     }
 
     function sendDataToASheet(actName, value, earned, unit) {
-        const formattedDate = new Date().toLocaleDateString('th-TH');
+        // ใช้ format ที่ตัดเวลาทิ้ง
+        const formattedDate = new Date().toLocaleDateString('th-TH', dateOptions);
         const logText = `⌚ ${actName}: ${value} ${unit} (+${earned} บาท)`;
         const script = document.createElement('script');
         script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&user=${encodeURIComponent(loggedInUser)}&text=${encodeURIComponent(logText)}&amount=${earned}&callback=handleData&_ts=${Date.now()}`;
@@ -345,7 +346,6 @@
 
     function handleData(response) {
         if (!response) return;
-        
         if (!accessToken) return;
         
         document.getElementById('totalMoney').innerText = (response.totalAll || 0).toLocaleString();
@@ -368,7 +368,6 @@
             response.historyData.forEach(item => {
                 const li = document.createElement('li'); 
                 li.className = item.isReduced ? 'history-item reduced' : 'history-item';
-                
                 li.innerHTML = `
                     <div style="flex:1;">
                         <span style="font-size: 13.5px;">${item.text}</span><br>
@@ -384,7 +383,7 @@
         setButtonsState(false);
     }
 
-    // ✍️ เพิ่มกิจกรรม (มือ) - แก้ไขปัญหา Timezone วันที่เลื่อน
+    // ✍️ เพิ่มกิจกรรม (มือ) - ปรับ Format ให้แสดงแค่วันที่
     function addActivity(type, inputId, rate, unit) {
         if (!accessToken) { alert("⚠️ กรุณา '🔗 Login Google' ก่อนทำการบันทึกข้อมูลครับ!"); return; }
         
@@ -396,11 +395,11 @@
         const rawDate = document.getElementById('activityDate').value;
         let formattedDate;
         if (rawDate) {
-            // จับแยก ปี-เดือน-วัน แล้วสร้าง Date ใหม่ด้วย Local Time ป้องกันวันที่เลื่อน
             const [y, m, d] = rawDate.split('-');
-            formattedDate = new Date(y, m - 1, d).toLocaleDateString('th-TH');
+            const safeDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 12, 0, 0);
+            formattedDate = safeDate.toLocaleDateString('th-TH', dateOptions);
         } else {
-            formattedDate = new Date().toLocaleDateString('th-TH');
+            formattedDate = new Date().toLocaleDateString('th-TH', dateOptions);
         }
 
         const script = document.createElement('script');
@@ -409,7 +408,7 @@
         inputElement.value = '';
     }
 
-    // 💸 หักค่าใช้จ่าย - แก้ไขปัญหา Timezone วันที่เลื่อน
+    // 💸 หักค่าใช้จ่าย - ปรับ Format ให้แสดงแค่วันที่
     function deductExpense() {
         if (!accessToken) { alert("⚠️ กรุณา '🔗 Login Google' ก่อนทำการบันทึกค่าใช้จ่ายครับ!"); return; }
         
@@ -422,11 +421,11 @@
         const rawDate = document.getElementById('activityDate').value;
         let formattedDate;
         if (rawDate) {
-            // จับแยก ปี-เดือน-วัน แล้วสร้าง Date ใหม่ด้วย Local Time ป้องกันวันที่เลื่อน
             const [y, m, d] = rawDate.split('-');
-            formattedDate = new Date(y, m - 1, d).toLocaleDateString('th-TH');
+            const safeDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 12, 0, 0);
+            formattedDate = safeDate.toLocaleDateString('th-TH', dateOptions);
         } else {
-            formattedDate = new Date().toLocaleDateString('th-TH');
+            formattedDate = new Date().toLocaleDateString('th-TH', dateOptions);
         }
         
         const textLog = restaurant ? `🔻 ถอนเงินไปกิน ${restaurant} (-${amount} บาท)` : `🔻 ถอนเงิน (-${amount} บาท)`;
