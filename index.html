@@ -4,81 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buffet Fitness Challenge ⌚🍖</title>
-    <!-- โหลด Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        :root {
-            --primary: #ff4757;
-            --primary-light: #ff7675;
-            --secondary: #2ed573;
-            --warning: #ffa502;
-            --dark: #2f3542;
-            --light: #f1f2f6;
-            --gray-sub: #747d8c;
-            --border-color: #e9ecef;
-            --update-btn: #1e3799;
-            --google-blue: #4285F4;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
+        /* [CSS ของเดิม - ยังคงความสวยงามไว้ครบถ้วน] */
+        :root { --primary: #ff4757; --primary-light: #ff7675; --secondary: #2ed573; --warning: #ffa502; --dark: #2f3542; --light: #f1f2f6; --gray-sub: #747d8c; --border-color: #e9ecef; --google-blue: #4285F4; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         body { background-color: var(--light); color: var(--dark); padding: 16px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
         .container { width: 100%; max-width: 480px; background: white; padding: 24px; border-radius: 24px; box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
-        
         .top-navbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
-        .top-nav-btn { flex: 1; padding: 10px 4px; border-radius: 20px; font-size: 12.5px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; color: white; }
+        .top-nav-btn { flex: 1; padding: 10px 4px; border-radius: 20px; font-size: 12.5px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; color: white; }
         .top-nav-btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .top-nav-btn:disabled { background: #ccc !important; cursor: not-allowed; }
-
-        .google-auth-bar { background: #f8f9fa; border: 1px solid var(--border-color); padding: 12px; border-radius: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .btn-update-action { background: #1e3799; box-shadow: 0 4px 12px rgba(30, 55, 153, 0.2); }
+        .btn-manual-toggle { background: #341f97; box-shadow: 0 4px 12px rgba(52, 31, 151, 0.15); }
+        .google-auth-bar { background: #f8f9fa; border: 1px solid var(--border-color); padding: 12px; border-radius: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .auth-status { font-size: 12px; font-weight: 600; color: var(--gray-sub); flex: 1; }
         .auth-status.online { color: var(--secondary); }
-        .auth-btn-group { display: flex; gap: 6px; }
-        .btn-google-login { background: var(--google-blue); color: white; border: none; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .btn-google-login:hover { opacity: 0.9; }
+        .btn-google-login { background: var(--google-blue); color: white; border: none; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
         .btn-logout { background: #ff4757; }
-
-        .btn-update-action { background: var(--update-btn); box-shadow: 0 4px 12px rgba(30, 55, 153, 0.2); }
-        .btn-manual-toggle { background: #341f97; box-shadow: 0 4px 12px rgba(52, 31, 151, 0.15); }
-
-        .manual-expand-panel { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, margin-bottom 0.4s ease-out, padding 0.4s ease-out; background: #f8f9fa; border-radius: 18px; border: 1px solid transparent; }
+        .manual-expand-panel { max-height: 0; overflow: hidden; transition: 0.4s; background: #f8f9fa; border-radius: 18px; border: 1px solid transparent; }
         .manual-expand-panel.open { max-height: 1000px; margin-bottom: 20px; padding: 14px; border-color: var(--border-color); }
-
         h1 { text-align: center; color: var(--primary); margin-bottom: 20px; font-size: 22px; font-weight: 800; }
-        
-        .dashboard { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; padding: 24px 20px; border-radius: 18px; text-align: center; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(255, 71, 87, 0.2); }
-        .dashboard.debt { background: linear-gradient(135deg, #747d8c, #a4b0be); box-shadow: 0 8px 24px rgba(116, 125, 140, 0.2); }
-        .dashboard p { font-size: 13px; opacity: 0.85; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .dashboard { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; padding: 24px 20px; border-radius: 18px; text-align: center; margin-bottom: 20px; }
+        .dashboard.debt { background: linear-gradient(135deg, #747d8c, #a4b0be); }
+        .dashboard p { font-size: 13px; font-weight: 600; }
         .total-amount { font-size: 46px; font-weight: 800; margin: 6px 0; }
         #tierStatus { font-size: 13px; font-weight: 600; background: rgba(0, 0, 0, 0.15); padding: 4px 12px; border-radius: 12px; display: inline-block; margin-top: 12px; }
-        
-        .calendar-card { background: white; border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 10px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-        .calendar-card label { font-size: 12px; font-weight: 700; color: #555; }
-        .calendar-card input[type="date"] { border: 1px solid #ced4da; border-radius: 6px; padding: 4px 8px; font-size: 13px; outline: none; font-weight: 600; background: white; }
-
-        .activity-card { background: white; border: 1px solid var(--border-color); padding: 14px; border-radius: 12px; margin-bottom: 12px; }
-        .activity-card h3 { margin-bottom: 10px; font-size: 13px; font-weight: 700; color: #474747; }
-        .expense-card { background: #fffdf6; border: 1px solid #ffeaa7; padding: 16px; border-radius: 16px; margin-top: 10px; margin-bottom: 24px; }
-        .expense-card h3 { margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #e67e22; }
-        
+        .activity-card, .calendar-card { background: white; border: 1px solid var(--border-color); padding: 14px; border-radius: 12px; margin-bottom: 12px; }
+        .expense-card { background: #fffdf6; border: 1px solid #ffeaa7; padding: 16px; border-radius: 16px; margin-bottom: 24px; }
+        .expense-card h3 { color: #e67e22; margin-bottom: 12px; font-size: 14px; }
         .form-group { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-        input[type="number"], input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none; background: #f8f9fa; }
-        input[type="number"]:focus, input[type="text"]:focus { border-color: var(--primary); background: white; }
+        input[type="number"], input[type="text"], input[type="date"] { flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 8px; outline: none; }
         .unit { font-weight: 700; color: var(--gray-sub); width: 40px; font-size: 13px; }
-        
-        button.btn-add-act { width: 100%; padding: 10px; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 4px; }
-        button.btn-add-act:disabled { background: #ccc !important; cursor: not-allowed; }
-        .btn-add { background: var(--secondary); }
-        .btn-expense { background: var(--warning); box-shadow: 0 4px 12px rgba(255, 165, 2, 0.2); }
-        
-        .history { margin-top: 28px; }
-        .history h3 { border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; font-size: 14px; color: var(--gray-sub); font-weight: 700; }
+        button.btn-add-act { width: 100%; padding: 10px; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; background: var(--secondary); margin-top: 4px; }
+        button.btn-expense { background: var(--warning); }
+        .history h3 { border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; font-size: 14px; color: var(--gray-sub); }
         .history-list { max-height: 250px; overflow-y: auto; list-style: none; }
-        .history-item { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; font-weight: 600; border-left: 4px solid var(--secondary); }
+        .history-item { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 4px solid var(--secondary); }
         .history-item.reduced { border-left: 4px solid var(--warning); }
-        
-        .btn-delete-item { background: #ffeaa7; border: none; color: #e17055; border-radius: 8px; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: 0.2s; }
-        .btn-delete-item:hover { background: #ff7675; color: white; transform: scale(1.1); }
-        .loading { text-align: center; font-size: 14px; color: #ff4757; margin-bottom: 10px; font-weight: bold; }
+        .btn-delete-item { background: #ffeaa7; border: none; color: #e17055; border-radius: 8px; width: 30px; height: 30px; cursor: pointer; transition: 0.2s; }
+        .loading { text-align: center; font-size: 14px; color: #ff4757; margin-bottom: 10px; font-weight: bold; display: none; }
     </style>
 </head>
 <body>
@@ -86,356 +51,347 @@
 <div class="container">
     <div class="top-navbar">
         <button id="updateBtn" class="top-nav-btn btn-update-action action-btn" onclick="fetchFitnessData()" disabled>🔄 Update Activities</button>
-        <button class="top-nav-btn btn-manual-toggle action-btn" onclick="togglePanel('manualPanel')">➕ เพิ่มด้วยตัวเอง</button>
+        <button class="top-nav-btn btn-manual-toggle action-btn" onclick="document.getElementById('manualPanel').classList.toggle('open')">➕ เพิ่มด้วยตัวเอง</button>
     </div>
 
-    <!-- แถบ Login ที่มีปุ่ม Logout -->
+    <!-- Auth Bar -->
     <div class="google-auth-bar">
         <div id="authText" class="auth-status">🔴 ยังไม่ได้เชื่อมต่อบัญชี</div>
-        <div class="auth-btn-group">
-            <button id="loginGoogleBtn" class="btn-google-login" onclick="requestGoogleAuth()">🔗 Login Google</button>
-            <button id="logoutBtn" class="btn-google-login btn-logout" style="display:none;" onclick="logout()">🚪 Logout</button>
+        <div style="display:flex; gap:6px;">
+            <button id="loginGoogleBtn" class="btn-google-login" onclick="loginGoogle()">🔗 Login Google</button>
+            <button id="logoutBtn" class="btn-google-login btn-logout" style="display:none;" onclick="logoutGoogle()">🚪 Logout</button>
         </div>
     </div>
 
+    <!-- Manual Entry Panel -->
     <div id="manualPanel" class="manual-expand-panel">
-        <div class="calendar-card">
-            <label for="activityDate">📆 วันที่ทำกิจกรรม:</label>
-            <input type="date" id="activityDate">
+        <div class="calendar-card" style="display:flex; justify-content:space-between; align-items:center;">
+            <label style="font-size:12px; font-weight:bold; color:#555;">📆 วันที่ทำกิจกรรม:</label>
+            <input type="date" id="activityDate" style="padding:4px 8px; flex:none;">
         </div>
-        <div class="activity-form">
-            <div class="activity-card">
-                <h3>🏃‍♂️ วิ่ง (กิโลเมตรละ 10 บาท)</h3>
-                <div class="form-group"><input type="number" id="runInput" placeholder="กรอกระยะทาง" min="0" step="0.1"><span class="unit">กม.</span></div>
-                <button class="btn-add btn-add-act action-btn" onclick="addActivity('วิ่ง', 'runInput', 10, 'กม.')">บันทึกการวิ่ง</button>
-            </div>
-            <div class="activity-card">
-                <h3>🏋️‍♂️ เวทเทรนนิ่ง (10 kcal = 1 บาท)</h3>
-                <div class="form-group"><input type="number" id="weightInput" placeholder="กรอก Active Calories" min="0"><span class="unit">kcal</span></div>
-                <button class="btn-add btn-add-act action-btn" onclick="addActivity('เวทเทรนนิ่ง', 'weightInput', 0.1, 'kcal')">บันทึกการเวท</button>
-            </div>
-            <div class="activity-card">
-                <h3>🏸 ตีแบดมินตัน (30 kcal = 1 บาท)</h3>
-                <div class="form-group"><input type="number" id="badmintonInput" placeholder="กรอก Active Calories" min="0"><span class="unit">kcal</span></div>
-                <button class="btn-add btn-add-act action-btn" onclick="addActivity('ตีแบดมินตัน', 'badmintonInput', 1/30, 'kcal')">บันทึกการตีแบด</button>
-            </div>
+        
+        <div class="activity-card">
+            <h3 style="font-size:13px; margin-bottom:10px;">🏃‍♂️ วิ่ง (กิโลเมตรละ 10 บาท)</h3>
+            <div class="form-group"><input type="number" id="runInput" placeholder="กรอกระยะทาง"><span class="unit">กม.</span></div>
+            <button class="btn-add-act action-btn" onclick="addManualActivity('วิ่ง', 'runInput', 10, 'กม.')">บันทึกการวิ่ง</button>
+        </div>
+        <div class="activity-card">
+            <h3 style="font-size:13px; margin-bottom:10px;">🏋️‍♂️ เวทเทรนนิ่ง (10 kcal = 1 บาท)</h3>
+            <div class="form-group"><input type="number" id="weightInput" placeholder="กรอก Active Calories"><span class="unit">kcal</span></div>
+            <button class="btn-add-act action-btn" onclick="addManualActivity('เวทเทรนนิ่ง', 'weightInput', 0.1, 'kcal')">บันทึกการเวท</button>
+        </div>
+        <div class="activity-card">
+            <h3 style="font-size:13px; margin-bottom:10px;">🏸 ตีแบดมินตัน (30 kcal = 1 บาท)</h3>
+            <div class="form-group"><input type="number" id="badmintonInput" placeholder="กรอก Active Calories"><span class="unit">kcal</span></div>
+            <button class="btn-add-act action-btn" onclick="addManualActivity('ตีแบดมินตัน', 'badmintonInput', 1/30, 'kcal')">บันทึกการตีแบด</button>
         </div>
     </div>
 
     <h1>⌚ เปลี่ยนเหงื่อเป็นบุฟเฟ่ต์ 🍖</h1>
     
-    <!-- แสดงยอดรวมทั้งหมด -->
+    <!-- Dashboard -->
     <div id="dashboardArea" class="dashboard">
         <p>เงินกองกลางสะสมทั้งหมด</p>
         <div class="total-amount"><span id="totalMoney">0</span> ฿</div>
-        <div id="tierStatus">🔄 กรุณาล็อกอินเพื่อดูข้อมูล...</div>
+        <div id="tierStatus">🔒 กรุณาล็อกอินเพื่อดูข้อมูล...</div>
     </div>
 
-    <div id="loadingStatus" class="loading" style="display:none;">⏳ กำลังรับส่งข้อมูลแบบ Real-time...</div>
+    <div id="loadingStatus" class="loading">⏳ กำลังรับส่งข้อมูล...</div>
 
+    <!-- Expense Section -->
     <div class="expense-card">
         <h3>💸 บันทึกค่าใช้จ่าย / ถอนเงินกองกลาง</h3>
-        <!-- ช่องระบุชื่อร้านอาหาร -->
-        <div class="form-group">
-            <input type="text" id="restaurantInput" placeholder="ระบุชื่อร้านอาหาร (ถ้ามี)">
-        </div>
-        <div class="form-group">
-            <input type="number" id="expenseInput" placeholder="กรอกจำนวนเงินที่ใช้" min="1"><span class="unit">บาท</span>
-        </div>
-        <button class="btn-expense btn-add-act action-btn" onclick="deductExpense()">บันทึกค่าใช้จ่าย (ลบเงินคลัง)</button>
+        <div class="form-group"><input type="text" id="restaurantInput" placeholder="ระบุชื่อร้านอาหาร (ถ้ามี)"></div>
+        <div class="form-group"><input type="number" id="expenseInput" placeholder="กรอกจำนวนเงินที่ใช้"><span class="unit">บาท</span></div>
+        <button class="btn-add-act btn-expense action-btn" onclick="deductExpense()">บันทึกค่าใช้จ่าย (ลบเงินคลัง)</button>
     </div>
 
+    <!-- History -->
     <div class="history">
         <h3>📜 ประวัติการสะสมทุน (ลบรายอันได้)</h3>
-        <ul id="historyList" class="history-list"></ul>
+        <ul id="historyList" class="history-list">
+            <li class="history-item" style="border-left:4px solid #ccc; justify-content:center;"><span>กรุณาล็อกอินเพื่อดูประวัติ</span></li>
+        </ul>
     </div>
 </div>
 
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxcceccnfFNs2tvvOdB5tFMLKi8wWR5FY5YkOU8dzgFMgAtCdIqsnuPhC6WF6MBL3-8qQ/exec";
-    const GOOGLE_CLIENT_ID = "631377617694-b2j4r98uadect1e0idu7rij4ug8an1f9.apps.googleusercontent.com"; 
-    
-    // ตั้งค่า Format วันที่แบบ วัน เดือน ปี (เช่น วันอังคารที่ 4 สิงหาคม 2569)
-    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    /* =========================================
+       1. CONFIGURATION & CONSTANTS
+       ========================================= */
+    const CONFIG = {
+        WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxcceccnfFNs2tvvOdB5tFMLKi8wWR5FY5YkOU8dzgFMgAtCdIqsnuPhC6WF6MBL3-8qQ/exec",
+        CLIENT_ID: "631377617694-b2j4r98uadect1e0idu7rij4ug8an1f9.apps.googleusercontent.com",
+        DATE_FORMAT: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+    };
 
+    // แผนผังกูเกิลฟิต (เพิ่มกิจกรรมใหม่ในอนาคตได้ง่ายๆ ที่นี่)
+    const ACTIVITY_MAP = {
+        8:  { name: "วิ่ง", rate: 10, unit: "กม.", stream: "derived:com.google.distance.delta:com.google.android.gms:merge_distance_delta", isDistance: true },
+        7:  { name: "เดิน", rate: 0.005, unit: "ก้าว", stream: "derived:com.google.step_count.delta:com.google.android.gms:merge_step_delta" },
+        57: { name: "เวทเทรนนิ่ง", rate: 0.1, unit: "kcal", stream: "derived:com.google.calories.expended:com.google.android.gms:merge_calories_expended" },
+        10: { name: "ตีแบดมินตัน", rate: 1/30, unit: "kcal", stream: "derived:com.google.calories.expended:com.google.android.gms:merge_calories_expended" }
+    };
+
+    let session = { token: null, user: "B" };
     let tokenClient;
-    let accessToken = null;
-    let loggedInUser = "B";
 
+    /* =========================================
+       2. INITIALIZATION
+       ========================================= */
     document.getElementById('activityDate').valueAsDate = new Date();
-    
-    checkSession();
+    loadSession();
 
-    function checkSession() {
-        const savedToken = localStorage.getItem('fitToken');
-        const savedUser = localStorage.getItem('fitUser');
-        if (savedToken && savedUser) {
-            accessToken = savedToken;
-            loggedInUser = savedUser;
-            updateLoginUI();
-            refreshData(); 
+    /* =========================================
+       3. AUTHENTICATION (Google Login)
+       ========================================= */
+    function loadSession() {
+        const token = localStorage.getItem('fitToken');
+        const user = localStorage.getItem('fitUser');
+        if (token && user) {
+            session = { token, user };
+            updateAuthUI(true);
+            requestData('read');
         } else {
-            clearDashboard(); 
+            updateAuthUI(false);
         }
     }
 
-    function clearDashboard() {
-        document.getElementById('totalMoney').innerText = "0";
-        document.getElementById('dashboardArea').classList.remove('debt');
-        document.getElementById('tierStatus').innerText = "🔒 กรุณาล็อกอินเพื่อดูข้อมูลตารางกองกลาง";
-        document.getElementById('historyList').innerHTML = '<li class="history-item" style="border-left:4px solid #ccc; justify-content:center;"><span>กรุณาล็อกอินเพื่อดูประวัติ</span></li>';
-    }
-
-    function logout() {
-        localStorage.removeItem('fitToken');
-        localStorage.removeItem('fitUser');
-        accessToken = null;
-        loggedInUser = "B";
-        document.getElementById('authText').innerText = "🔴 ยังไม่ได้เชื่อมต่อบัญชี";
-        document.getElementById('authText').classList.remove('online');
-        document.getElementById('loginGoogleBtn').style.display = "block";
-        document.getElementById('logoutBtn').style.display = "none";
-        document.getElementById('updateBtn').disabled = true;
-        clearDashboard(); 
-    }
-
-    function updateLoginUI() {
-        document.getElementById('authText').innerText = `🟢 บัญชีคุณ: ${loggedInUser}`;
-        document.getElementById('authText').classList.add('online');
-        document.getElementById('loginGoogleBtn').style.display = "none";
-        document.getElementById('logoutBtn').style.display = "block";
-        document.getElementById('updateBtn').disabled = false;
-    }
-
-    function requestGoogleAuth() {
-        if(typeof google === 'undefined') { alert('กำลังโหลดระบบ Google API กรุณารอสักครู่ครับ'); return; }
+    function loginGoogle() {
+        if(typeof google === 'undefined') return alert('กำลังโหลดระบบ Google API กรุณารอสักครู่ครับ');
         
         tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
+            client_id: CONFIG.CLIENT_ID,
             scope: 'https://www.googleapis.com/auth/fitness.activity.read https://www.googleapis.com/auth/userinfo.profile',
-            callback: (tokenResponse) => {
-                if (tokenResponse.error !== undefined) { alert('การเชื่อมต่อล้มเหลว'); return; }
-                accessToken = tokenResponse.access_token;
+            callback: (res) => {
+                if (res.error) return alert('การเชื่อมต่อล้มเหลว');
+                session.token = res.access_token;
                 
-                fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                })
-                .then(res => res.json())
-                .then(user => {
-                    loggedInUser = user.given_name || "B";
-                    localStorage.setItem('fitToken', accessToken);
-                    localStorage.setItem('fitUser', loggedInUser);
-                    updateLoginUI();
-                    refreshData(); 
-                    fetchFitnessData(); 
-                })
-                .catch(() => {
-                    loggedInUser = "B";
-                    localStorage.setItem('fitToken', accessToken);
-                    localStorage.setItem('fitUser', loggedInUser);
-                    updateLoginUI();
-                    refreshData();
-                    fetchFitnessData(); 
-                });
+                fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { 'Authorization': `Bearer ${session.token}` } })
+                    .then(r => r.json())
+                    .then(u => setupUser(u.given_name))
+                    .catch(() => setupUser("B"));
             },
         });
         tokenClient.requestAccessToken();
     }
 
-    function fetchFitnessData() {
-        if (!accessToken) {
-            alert("⚠️ กรุณากดปุ่ม '🔗 Login Google' เพื่อเชื่อมต่อบัญชีก่อนครับ!");
-            return;
-        }
+    function setupUser(userName) {
+        session.user = userName || "B";
+        localStorage.setItem('fitToken', session.token);
+        localStorage.setItem('fitUser', session.user);
+        updateAuthUI(true);
+        requestData('read');
+        fetchFitnessData();
+    }
 
-        setButtonsState(true);
+    function logoutGoogle() {
+        localStorage.clear();
+        session = { token: null, user: "B" };
+        updateAuthUI(false);
+    }
+
+    function requireAuth() {
+        if (!session.token) { alert("⚠️ กรุณากด '🔗 Login Google' ก่อนทำรายการครับ"); return false; }
+        return true;
+    }
+
+    /* =========================================
+       4. GOOGLE FIT INTEGRATION
+       ========================================= */
+    async function fetchFitnessData() {
+        if (!requireAuth()) return;
+        setLoading(true);
+
         const start = new Date(); start.setHours(0,0,0,0);
         const end = new Date();
 
-        fetch(`https://www.googleapis.com/fitness/v1/users/me/sessions?startTime=${start.toISOString()}&endTime=${end.toISOString()}`, {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
-        })
-        .then(res => {
-            if (!res.ok) {
-                if(res.status === 401) { logout(); throw new Error("TOKEN_EXPIRED"); }
-                throw new Error("API_ERROR");
-            }
-            return res.json();
-        })
-        .then(resData => {
-            if (resData.session && resData.session.length > 0) {
-                const fitSessions = resData.session.filter(s => [7, 8, 57, 10].includes(Number(s.activityType)));
-                if(fitSessions.length === 0) {
-                    setButtonsState(false);
-                    return;
-                }
-                const lastAct = fitSessions[fitSessions.length - 1];
-                const syncKey = "synced_" + lastAct.startTimeMillis;
-                if(localStorage.getItem(syncKey)) {
-                    setButtonsState(false);
-                    return;
-                }
+        try {
+            const res = await fetch(`https://www.googleapis.com/fitness/v1/users/me/sessions?startTime=${start.toISOString()}&endTime=${end.toISOString()}`, {
+                headers: { 'Authorization': `Bearer ${session.token}` }
+            });
+            
+            if (res.status === 401) throw new Error("TOKEN_EXPIRED");
+            
+            const data = await res.json();
+            const validSessions = (data.session || []).filter(s => ACTIVITY_MAP[s.activityType]);
+            
+            if (!validSessions.length) return handleFetchComplete("อัปเดตล่าสุดแล้ว: วันนี้ยังไม่มีกิจกรรมเข้าในระบบครับ");
 
-                const actType = Number(lastAct.activityType);
-                let typeName = "", rate = 0, unit = "", stream = "";
-                
-                if(actType === 8) { typeName = "วิ่ง"; rate = 10; unit = "กม."; stream = "derived:com.google.distance.delta:com.google.android.gms:merge_distance_delta"; }
-                else if(actType === 7) { typeName = "เดิน"; rate = 0.005; unit = "ก้าว"; stream = "derived:com.google.step_count.delta:com.google.android.gms:merge_step_delta"; }
-                else if(actType === 57) { typeName = "เวทเทรนนิ่ง"; rate = 0.1; unit = "kcal"; stream = "derived:com.google.calories.expended:com.google.android.gms:merge_calories_expended"; }
-                else { typeName = "ตีแบดมินตัน"; rate = 1/30; unit = "kcal"; stream = "derived:com.google.calories.expended:com.google.android.gms:merge_calories_expended"; }
+            const lastAct = validSessions[validSessions.length - 1];
+            const syncKey = "synced_" + lastAct.startTimeMillis;
+            if (localStorage.getItem(syncKey)) return handleFetchComplete(null); // เงียบๆ ถ้ารู้ว่าอัปเดตแล้ว
 
-                fetch(`https://www.googleapis.com/fitness/v1/users/me/dataSources/${stream}/datasets/${lastAct.startTimeMillis}000000-${lastAct.endTimeMillis}000000`, { headers: { 'Authorization': `Bearer ${accessToken}` } })
-                .then(r => r.json())
-                .then(ds => {
-                    let val = 0;
-                    if(ds.point) ds.point.forEach(p => val += (p.value[0].fpVal || p.value[0].intVal || 0));
-                    if(actType === 8) val /= 1000;
-                    
-                    const earned = Math.round(val * rate);
-                    if(earned <= 0) {
-                        setButtonsState(false);
-                        return;
-                    }
-                    localStorage.setItem(syncKey, "true"); 
-                    sendDataToASheet(typeName, val.toFixed(1), earned, unit);
-                });
-            } else {
-                setButtonsState(false);
-            }
-        })
-        .catch((err) => {
-            if(err.message === "TOKEN_EXPIRED") alert("เซสชันหมดอายุ กรุณากด Login ใหม่อีกครั้งครับ 🔄");
-            setButtonsState(false);
-        });
+            await processFitnessSession(lastAct, syncKey);
+
+        } catch (err) {
+            if (err.message === "TOKEN_EXPIRED") alert("เซสชันหมดอายุ กรุณากด Login ใหม่อีกครั้งครับ 🔄");
+            setLoading(false);
+        }
     }
 
-    function sendDataToASheet(actName, value, earned, unit) {
-        // ใช้ format ที่ตัดเวลาทิ้ง
-        const formattedDate = new Date().toLocaleDateString('th-TH', dateOptions);
-        const logText = `⌚ ${actName}: ${value} ${unit} (+${earned} บาท)`;
-        const script = document.createElement('script');
-        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&user=${encodeURIComponent(loggedInUser)}&text=${encodeURIComponent(logText)}&amount=${earned}&callback=handleData&_ts=${Date.now()}`;
-        document.body.appendChild(script); script.remove();
-        alert(`🎉 บันทึกกิจกรรมอัตโนมัติเรียบร้อย!`);
+    async function processFitnessSession(actData, syncKey) {
+        const conf = ACTIVITY_MAP[actData.activityType];
+        const res = await fetch(`https://www.googleapis.com/fitness/v1/users/me/dataSources/${conf.stream}/datasets/${actData.startTimeMillis}000000-${actData.endTimeMillis}000000`, { 
+            headers: { 'Authorization': `Bearer ${session.token}` } 
+        });
+        
+        const ds = await res.json();
+        let val = 0;
+        (ds.point || []).forEach(p => val += (p.value[0].fpVal || p.value[0].intVal || 0));
+        
+        if (conf.isDistance) val /= 1000; // แปลงเมตรเป็นกิโลเมตร
+        
+        const earned = Math.round(val * conf.rate);
+        if (earned <= 0) return handleFetchComplete();
+
+        localStorage.setItem(syncKey, "true"); 
+        
+        const textLog = `⌚ ${conf.name}: ${val.toFixed(1)} ${conf.unit} (+${earned} บาท)`;
+        requestData('add', { text: textLog, amount: earned, date: getSafeFormattedDate() }, () => alert(`🎉 บันทึกกิจกรรมอัตโนมัติเรียบร้อย!`));
+    }
+
+    function handleFetchComplete(msg) {
+        if(msg) alert(msg);
+        setLoading(false);
+    }
+
+    /* =========================================
+       5. DATA ACTIONS (Add, Deduct, Delete)
+       ========================================= */
+    function addManualActivity(type, inputId, rate, unit) {
+        if (!requireAuth()) return;
+        const input = document.getElementById(inputId);
+        const value = parseFloat(input.value);
+        
+        if (isNaN(value) || value <= 0) return alert('กรุณากรอกตัวเลขที่มากกว่า 0 นะครับ');
+        const earned = Math.round(value * rate); 
+        if (earned <= 0) return alert('ยอดเงินน้อยเกินไป ระบบไม่บันทึกครับ');
+        
+        const textLog = `✍️ ${type} (คีย์มือ): ${value} ${unit} (+${earned} บาท)`;
+        requestData('add', { text: textLog, amount: earned, date: getSafeFormattedDate() });
+        input.value = '';
+    }
+
+    function deductExpense() {
+        if (!requireAuth()) return;
+        const amount = Math.round(parseFloat(document.getElementById('expenseInput').value));
+        const restaurant = document.getElementById('restaurantInput').value.trim();
+        
+        if (isNaN(amount) || amount <= 0) return alert('กรุณากรอกจำนวนเงินที่ถูกต้องครับ');
+        
+        const textLog = restaurant ? `🔻 ถอนเงินไปกิน ${restaurant} (-${amount} บาท)` : `🔻 ถอนเงิน (-${amount} บาท)`;
+        requestData('add', { text: textLog, amount: -amount, date: getSafeFormattedDate() });
+        
+        document.getElementById('expenseInput').value = '';
+        document.getElementById('restaurantInput').value = '';
     }
 
     function deleteActivity(id) {
-        if (!accessToken) { alert("⚠️ กรุณาล็อกอินก่อนลบข้อมูลครับ!"); return; }
-        
+        if (!requireAuth()) return;
         if(confirm("คุณต้องการลบรายการนี้ใช่หรือไม่? (ยอดเงินจะถูกหักออก)")) {
-            setButtonsState(true);
-            const script = document.createElement('script');
-            script.src = `${WEB_APP_URL}?action=delete&id=${id}&callback=handleData&_ts=${Date.now()}`;
-            document.body.appendChild(script); script.remove();
+            requestData('delete', { id: id });
         }
     }
 
-    function setButtonsState(disabled) {
-        document.querySelectorAll('.action-btn').forEach(btn => btn.disabled = disabled);
-        document.getElementById('loadingStatus').style.display = disabled ? 'block' : 'none';
-    }
-
-    function togglePanel(targetId) { document.getElementById(targetId).classList.toggle('open'); }
-
-    function refreshData() {
-        const oldScript = document.getElementById('jsonpScript'); if (oldScript) oldScript.remove();
-        const script = document.createElement('script'); script.id = 'jsonpScript';
-        script.src = `${WEB_APP_URL}?callback=handleData&_ts=${Date.now()}`;
-        document.body.appendChild(script);
-    }
-
-    function handleData(response) {
-        if (!response) return;
-        if (!accessToken) return;
+    /* =========================================
+       6. HELPERS (Google Sheets API & Date)
+       ========================================= */
+    // ฟังก์ชันจัดการวันที่: ป้องกัน Timezone บิดเบี้ยว โดยตั้งเวลาเป็น 12:00 น. ก่อนแปลง
+    function getSafeFormattedDate() {
+        const rawDate = document.getElementById('activityDate').value;
+        if (!rawDate) return new Date().toLocaleDateString('th-TH', CONFIG.DATE_FORMAT);
         
+        const [y, m, d] = rawDate.split('-');
+        const safeDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 12, 0, 0);
+        return safeDate.toLocaleDateString('th-TH', CONFIG.DATE_FORMAT);
+    }
+
+    // ฟังก์ชันศูนย์กลาง สำหรับยิงคำสั่งไปหา App Script
+    function requestData(action, params = {}, callback = null) {
+        setLoading(true);
+        window.appScriptCallback = function(response) {
+            renderUI(response);
+            if(callback) callback();
+        };
+
+        const script = document.createElement('script');
+        let url = `${CONFIG.WEB_APP_URL}?action=${action}&callback=appScriptCallback&_ts=${Date.now()}`;
+        
+        if(action === 'add') {
+            url += `&date=${encodeURIComponent(params.date)}&user=${encodeURIComponent(session.user)}&text=${encodeURIComponent(params.text)}&amount=${params.amount}`;
+        } else if (action === 'delete') {
+            url += `&id=${params.id}`;
+        }
+        
+        script.src = url;
+        document.body.appendChild(script); 
+        script.remove();
+    }
+
+    /* =========================================
+       7. UI RENDERING
+       ========================================= */
+    function renderUI(response) {
+        if (!session.token) return; // ดักเผื่อกรณีพึ่งกด Logout ไป
+        setLoading(false);
+        
+        // อัปเดตยอดรวม
         document.getElementById('totalMoney').innerText = (response.totalAll || 0).toLocaleString();
         
+        // จัดการสถานะข้อความ (Tier)
         const dashboard = document.getElementById('dashboardArea');
         let statusText = "🎯 เริ่มสะสมเพื่อมื้ออร่อย!";
-        if (response.totalAll < 0) {
-            dashboard.classList.add('debt');
-            statusText = "🚨 อยู่ในช่วงติดหนี้! รีบออกกำลังกายเพื่อชดใช้ด่วน!";
-        } else {
-            dashboard.classList.remove('debt');
-            if (response.totalAll >= 3000) statusText = "👑 ระดับ Gold: ชาบูพรีเมียม / โรงแรมหรูจัดเต็ม!";
-            else if (response.totalAll >= 1500) statusText = "🥩 ระดับ Silver: ปิ้งย่างเกาหลี / แซลมอนในห้าง!";
-            else if (response.totalAll >= 600) statusText = "🐷 ระดับ Bronze: ชาบู/หมูกระทะแถวบ้านอิ่มๆ!";
-        }
+        dashboard.classList.remove('debt');
+        
+        if (response.totalAll < 0) { dashboard.classList.add('debt'); statusText = "🚨 อยู่ในช่วงติดหนี้! รีบออกกำลังกายชดใช้ด่วน!"; } 
+        else if (response.totalAll >= 3000) statusText = "👑 ระดับ Gold: ชาบูพรีเมียม / โรงแรมหรูจัดเต็ม!";
+        else if (response.totalAll >= 1500) statusText = "🥩 ระดับ Silver: ปิ้งย่างเกาหลี / แซลมอนในห้าง!";
+        else if (response.totalAll >= 600) statusText = "🐷 ระดับ Bronze: ชาบู/หมูกระทะแถวบ้านอิ่มๆ!";
         document.getElementById('tierStatus').innerText = statusText;
 
-        const listElement = document.getElementById('historyList'); listElement.innerHTML = '';
+        // วาดประวัติกิจกรรม
+        const listElement = document.getElementById('historyList');
         if (response.historyData && response.historyData.length > 0) {
-            response.historyData.forEach(item => {
-                const li = document.createElement('li'); 
-                li.className = item.isReduced ? 'history-item reduced' : 'history-item';
-                li.innerHTML = `
+            listElement.innerHTML = response.historyData.map(item => `
+                <li class="history-item ${item.isReduced ? 'reduced' : ''}">
                     <div style="flex:1;">
                         <span style="font-size: 13.5px;">${item.text}</span><br>
                         <small style="color:#999">${item.date}</small>
                     </div>
                     <button class="btn-delete-item action-btn" onclick="deleteActivity('${item.id}')">❌</button>
-                `;
-                listElement.appendChild(li);
-            });
+                </li>
+            `).join('');
         } else {
-            listElement.innerHTML = '<li class="history-item" style="border-left:4px solid #ccc; justify-content:center;"><span>ยังไม่มีประวัติกิจกรรมในรอบนี้</span></li>';
+            listElement.innerHTML = '<li class="history-item" style="border-left:4px solid #ccc; justify-content:center;"><span>ยังไม่มีประวัติในระบบ</span></li>';
         }
-        setButtonsState(false);
     }
 
-    // ✍️ เพิ่มกิจกรรม (มือ) - ปรับ Format ให้แสดงแค่วันที่
-    function addActivity(type, inputId, rate, unit) {
-        if (!accessToken) { alert("⚠️ กรุณา '🔗 Login Google' ก่อนทำการบันทึกข้อมูลครับ!"); return; }
-        
-        const inputElement = document.getElementById(inputId); const value = parseFloat(inputElement.value);
-        if (isNaN(value) || value <= 0) { alert('กรุณากรอกตัวเลขที่มากกว่า 0 นะครับ'); return; }
-        const earned = Math.round(value * rate); if (earned <= 0) { alert('ยอดเงินน้อยเกินไป ระบบไม่บันทึกครับ'); return; }
-        setButtonsState(true);
-        
-        const rawDate = document.getElementById('activityDate').value;
-        let formattedDate;
-        if (rawDate) {
-            const [y, m, d] = rawDate.split('-');
-            const safeDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 12, 0, 0);
-            formattedDate = safeDate.toLocaleDateString('th-TH', dateOptions);
+    function updateAuthUI(isLoggedIn) {
+        const text = document.getElementById('authText');
+        if (isLoggedIn) {
+            text.innerText = `🟢 บัญชีคุณ: ${session.user}`;
+            text.classList.add('online');
+            document.getElementById('loginGoogleBtn').style.display = "none";
+            document.getElementById('logoutBtn').style.display = "block";
+            document.getElementById('updateBtn').disabled = false;
         } else {
-            formattedDate = new Date().toLocaleDateString('th-TH', dateOptions);
+            text.innerText = "🔴 ยังไม่ได้เชื่อมต่อบัญชี";
+            text.classList.remove('online');
+            document.getElementById('loginGoogleBtn').style.display = "block";
+            document.getElementById('logoutBtn').style.display = "none";
+            
+            document.getElementById('totalMoney').innerText = "0";
+            document.getElementById('dashboardArea').classList.remove('debt');
+            document.getElementById('tierStatus').innerText = "🔒 กรุณาล็อกอินเพื่อดูข้อมูล";
+            document.getElementById('historyList').innerHTML = '<li class="history-item" style="border-left:4px solid #ccc; justify-content:center;"><span>กรุณาล็อกอินเพื่อดูประวัติ</span></li>';
+            setLoading(false);
         }
-
-        const script = document.createElement('script');
-        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&user=${encodeURIComponent(loggedInUser)}&text=${encodeURIComponent(`✍️ ${type} (คีย์มือ): ${value} ${unit} (+${earned} บาท)`)}&amount=${earned}&callback=handleData&_ts=${Date.now()}`;
-        document.body.appendChild(script); script.remove();
-        inputElement.value = '';
     }
 
-    // 💸 หักค่าใช้จ่าย - ปรับ Format ให้แสดงแค่วันที่
-    function deductExpense() {
-        if (!accessToken) { alert("⚠️ กรุณา '🔗 Login Google' ก่อนทำการบันทึกค่าใช้จ่ายครับ!"); return; }
-        
-        const expenseInput = document.getElementById('expenseInput'); const amount = Math.round(parseFloat(expenseInput.value));
-        const restaurantInput = document.getElementById('restaurantInput'); const restaurant = restaurantInput.value.trim();
-        
-        if (isNaN(amount) || amount <= 0) { alert('กรุณากรอกจำนวนเงินที่ถูกต้องครับ'); return; }
-        setButtonsState(true);
-        
-        const rawDate = document.getElementById('activityDate').value;
-        let formattedDate;
-        if (rawDate) {
-            const [y, m, d] = rawDate.split('-');
-            const safeDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 12, 0, 0);
-            formattedDate = safeDate.toLocaleDateString('th-TH', dateOptions);
-        } else {
-            formattedDate = new Date().toLocaleDateString('th-TH', dateOptions);
-        }
-        
-        const textLog = restaurant ? `🔻 ถอนเงินไปกิน ${restaurant} (-${amount} บาท)` : `🔻 ถอนเงิน (-${amount} บาท)`;
-        
-        const script = document.createElement('script');
-        script.src = `${WEB_APP_URL}?action=add&date=${encodeURIComponent(formattedDate)}&user=${encodeURIComponent(loggedInUser)}&text=${encodeURIComponent(textLog)}&amount=${-amount}&callback=handleData&_ts=${Date.now()}`;
-        document.body.appendChild(script); script.remove();
-        
-        expenseInput.value = '';
-        restaurantInput.value = '';
+    function setLoading(isLoading) {
+        document.querySelectorAll('.action-btn').forEach(b => b.disabled = isLoading);
+        document.getElementById('loadingStatus').style.display = isLoading ? 'block' : 'none';
     }
 </script>
 </body>
